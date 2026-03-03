@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sanal Konsol - Arena Hayatta Kalma</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a2e;
+            color: #fff;
+            font-family: sans-serif;
+            touch-action: none; /* Mobilde parmakla kaydırmayı kapatır */
+        }
+        canvas {
+            display: block;
+        }
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        /* Sanal Joystick Tasarımı */
+        #joystick-zone {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+        #stick {
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        /* Oyun Sonu Ekranı */
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 25, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e94560;
+            z-index: 20;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #e94560;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:active {
+            background-color: #c83349;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">Skor: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="joystick-zone">
+        <div id="stick"></div>
+    </div>
+
+    <div id="game-over">
+        <h2>Oyun Bitti!</h2>
+        <p>Dayanma Süren: <span id="final-score">0</span> saniye</p>
+        <button onclick="resetGame()">Tekrar Oyna</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+
+        // Ekran boyutunu ayarla
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Joystick Mantığı
+        const joystickZone = document.getElementById('joystick-zone');
+        const stick = document.getElementById('stick');
+        let joyX = 0, joyY = 0;
+        const maxStickDistance = 35;
+        const centerX = 60, centerY = 60;
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.targetTouches[0];
+            const rect = joystickZone.getBoundingClientRect();
+            let x = touch.clientX - rect.left - centerX;
+            let y = touch.clientY - rect.top - centerY;
+            
+            const distance = Math.min(Math.sqrt(x*x + y*y), maxStickDistance);
+            const angle = Math.atan2(y, x);
+            
+            const stickX = Math.cos(angle) * distance;
+            const stickY = Math.sin(angle) * distance;
+            
+            stick.style.transform = `translate(${stickX}px, ${stickY}px)`;
+            
+            // Hızı -1 ile 1 arasına normalize et
+            joyX = stickX / maxStickDistance;
+            joyY = stickY / maxStickDistance;
+        }
+
+        joystickZone.addEventListener('touchstart', handleTouch);
+        joystickZone.addEventListener('touchmove', handleTouch);
+        joystickZone.addEventListener('touchend', () => {
+            joyX = 0; joyY = 0;
+            stick.style.transform = `translate(0px, 0px)`;
+        });
+
+        // Oyun Değişkenleri
+        let player = { x: canvas.width/2, y: canvas.height/2, radius: 15, speed: 5, color: '#0f3460' };
+        let enemies = [];
+        let score = 0;
+        let frameCount = 0;
+        let isGameOver = false;
+        let enemySpawnRate = 60; // Düşük sayı daha sık düşman demek
+        let baseEnemySpeed = 1.5;
+
+        function spawnEnemy() {
+            let x, y;
+            // Düşmanları ekranın dışından gönder
+            if (Math.random() < 0.5) {
+                x = Math.random() < 0.5 ? -30 : canvas.width + 30;
+                y = Math.random() * canvas.height;
+            } else {
+                x = Math.random() * canvas.width;
+                y = Math.random() < 0.5 ? -30 : canvas.height + 30;
+            }
+            
+            enemies.push({
+                x: x,
+                y: y,
+                radius: 12,
+                speed: baseEnemySpeed + Math.random() * 1.5,
+                color: '#e94560'
+            });
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            // Oyuncu Hareketi
+            player.x += joyX * player.speed;
+            player.y += joyY * player.speed;
+
+            // Oyuncuyu ekran içinde tut
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            // Düşman Hareketi ve Çarpışma Testi
+            for (let i = 0; i < enemies.length; i++) {
+                let e = enemies[i];
+                // Düşmanın oyuncuya doğru ilerlemesi
+                let dx = player.x - e.x;
+                let dy = player.y - e.y;
+                let distance = Math.hypot(dx, dy);
+                
+                e.x += (dx / distance) * e.speed;
+                e.y += (dy / distance) * e.speed;
+
+                // Çarpışma kontrolü (Oyuncu vuruldu mu?)
+                if (distance < player.radius + e.radius) {
+                    gameOver();
+                }
+            }
+
+            // Zorluk artışı ve düşman spawnlama
+            frameCount++;
+            if (frameCount % 60 === 0) {
+                score++;
+                scoreElement.innerText = score;
+                // Her 10 saniyede bir düşman hızını ve sayısını artır
+                if (score % 10 === 0) {
+                    baseEnemySpeed += 0.3;
+                    if(enemySpawnRate > 20) enemySpawnRate -= 5;
+                }
+            }
+
+            if (frameCount % enemySpawnRate === 0) {
+                spawnEnemy();
+            }
+        }
+
+        function draw() {
+            // Arka planı temizle
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (isGameOver) return;
+
+            // Oyuncuyu çiz
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = player.color;
+            ctx.fill();
+            ctx.strokeStyle = '#43dde6';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Düşmanları çiz
+            enemies.forEach(e => {
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                ctx.fillStyle = e.color;
+                ctx.fill();
+                ctx.strokeStyle = '#ff2e63';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function loop() {
+            update();
+            draw();
+            if (!isGameOver) {
+                requestAnimationFrame(loop);
+            }
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            gameOverScreen.style.display = 'block';
+            finalScoreElement.innerText = score;
+        }
+
+        window.resetGame = function() {
+            isGameOver = false;
+            gameOverScreen.style.display = 'none';
+            score = 0;
+            frameCount = 0;
+            enemies = [];
+            baseEnemySpeed = 1.5;
+            enemySpawnRate = 60;
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            scoreElement.innerText = score;
+            loop();
+        }
+
+        // Oyunu Başlat
+        loop();
+    </script>
+</body>
+      </html>
+      
