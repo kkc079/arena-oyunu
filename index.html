@@ -8,47 +8,68 @@
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0;
-            background-color: #1a1a24; /* Atari siyahı */
+            background-color: #1a1a24; 
             color: #ecf0f1;
             font-family: 'Courier New', Courier, monospace;
             display: flex; flex-direction: column;
             align-items: center; justify-content: space-between;
-            height: 100vh; overflow: hidden; touch-action: none;
+            /* 100vh yerine 100dvh kullanıyoruz ki Chrome'un alt barı butonları kesmesin */
+            height: 100dvh; max-height: 100dvh; 
+            overflow: hidden; touch-action: none;
             user-select: none; -webkit-user-select: none;
         }
 
-        #game-header {
-            margin-top: 15px; width: 100%; text-align: center;
+        /* --- BAŞLANGIÇ MENÜSÜ --- */
+        #start-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(26, 26, 36, 0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 50;
+        }
+        #start-menu h1 {
+            font-size: 40px; color: #39ff14; text-shadow: 0 0 15px rgba(57, 255, 20, 0.7);
+            margin-bottom: 10px; letter-spacing: 5px;
+        }
+        #start-menu p { color: #ccc; margin-bottom: 40px; font-size: 16px; }
+        
+        .start-btn {
+            background-color: #2c3e50; color: #fff; border: 2px solid #39ff14;
+            padding: 15px 30px; font-size: 18px; font-weight: bold;
+            border-radius: 8px; margin-bottom: 15px; cursor: pointer;
+            width: 80%; max-width: 300px; text-align: center;
+            box-shadow: 0 4px 0 #151e27; transition: 0.1s;
+        }
+        .start-btn.primary { background-color: #39ff14; color: #000; box-shadow: 0 4px 0 #28b40e; }
+        .start-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Oyun Arayüzü */
+        #game-ui {
+            display: none; width: 100%; height: 100%;
+            flex-direction: column; align-items: center; justify-content: space-between;
         }
 
-        h1 { margin: 0; font-size: 28px; color: #39ff14; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); letter-spacing: 2px; }
+        #game-header { margin-top: 10px; width: 100%; text-align: center; }
+        #game-header h2 { margin: 0; font-size: 22px; color: #39ff14; letter-spacing: 2px; }
         
         #score-board { 
-            font-size: 18px; font-weight: bold; margin-top: 10px; 
-            background: rgba(255,255,255,0.05); padding: 8px 20px;
+            font-size: 16px; font-weight: bold; margin-top: 5px; 
+            background: rgba(255,255,255,0.05); padding: 5px 15px;
             border-radius: 5px; border: 1px solid #333; display: inline-block;
         }
         .highlight { color: #f1c40f; }
 
-        /* Oyun Ekranı */
         #canvas-container {
-            margin-top: 10px;
-            padding: 5px;
-            background: #333;
-            border-radius: 5px;
+            margin-top: auto; margin-bottom: auto;
+            padding: 5px; background: #333; border-radius: 5px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.8);
         }
-        canvas {
-            background-color: #0f1c0f; /* Retro yeşilimsı siyah */
-            display: block;
-        }
+        canvas { background-color: #0f1c0f; display: block; }
 
-        /* Sanal Konsol (D-Pad) */
+        /* Sanal Konsol */
         #controls {
             display: grid;
-            grid-template-columns: 70px 70px 70px;
-            grid-template-rows: 70px 70px 70px;
-            gap: 12px; margin-bottom: 25px;
+            grid-template-columns: 65px 65px 65px;
+            grid-template-rows: 65px 65px 65px;
+            gap: 12px; margin-bottom: 20px;
         }
 
         .btn {
@@ -72,40 +93,46 @@
             display: none; position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%); background: rgba(10, 10, 15, 0.95);
             padding: 30px; border: 3px solid #ff003c; border-radius: 10px;
-            text-align: center; z-index: 10; width: 80%; max-width: 300px;
+            text-align: center; z-index: 60; width: 80%; max-width: 300px;
             box-shadow: 0 0 30px rgba(255, 0, 60, 0.4);
         }
-
         #game-over h2 { color: #ff003c; margin-top: 0; font-size: 26px; }
         #final-score { font-size: 18px; line-height: 1.5; color: #ccc; }
-        
         #restart-btn {
             background-color: #39ff14; color: #000; border: none;
             padding: 15px 20px; font-size: 18px; font-weight: bold;
             border-radius: 5px; margin-top: 20px; cursor: pointer; width: 100%;
-            text-transform: uppercase;
         }
         #restart-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-    <div id="game-header">
+    <div id="start-menu">
         <h1>S N A K E</h1>
-        <div id="score-board">
-            SKOR: <span id="score" style="color:#fff;">0</span> &nbsp;|&nbsp; REKOR: <span id="high-score" class="highlight">0</span>
+        <p>Retro Yılan Macerası</p>
+        <button class="start-btn primary" onclick="startGame(true)">📱 TAM EKRAN BAŞLA</button>
+        <button class="start-btn" onclick="startGame(false)">NORMAL BAŞLA</button>
+    </div>
+
+    <div id="game-ui">
+        <div id="game-header">
+            <h2>S N A K E</h2>
+            <div id="score-board">
+                SKOR: <span id="score" style="color:#fff;">0</span> | REKOR: <span id="high-score" class="highlight">0</span>
+            </div>
         </div>
-    </div>
 
-    <div id="canvas-container">
-        <canvas id="gameCanvas" width="320" height="320"></canvas>
-    </div>
+        <div id="canvas-container">
+            <canvas id="gameCanvas" width="320" height="320"></canvas>
+        </div>
 
-    <div id="controls">
-        <div class="btn" id="btn-up">▲</div>
-        <div class="btn" id="btn-left">◀</div>
-        <div class="btn" id="btn-right">▶</div>
-        <div class="btn" id="btn-down">▼</div>
+        <div id="controls">
+            <div class="btn" id="btn-up">▲</div>
+            <div class="btn" id="btn-left">◀</div>
+            <div class="btn" id="btn-right">▶</div>
+            <div class="btn" id="btn-down">▼</div>
+        </div>
     </div>
 
     <div id="game-over">
@@ -125,24 +152,18 @@
         const grid = 16;
         let gameLoopId;
         let isGameOver = false;
+        let isGameRunning = false;
         
         let score = 0;
         let highScore = localStorage.getItem('retroSnakeHighScore') || 0;
         highScoreElement.innerText = highScore;
 
-        // Hız kontrolü (sayı küçüldükçe oyun hızlanır)
         let baseSpeed = 10; 
         let currentSpeed = baseSpeed;
         let frameCount = 0;
-        let changingDirection = false; // Bug fix için kilit
+        let changingDirection = false;
 
-        let snake = {
-            x: 160, y: 160, // Ekranın ortası
-            dx: grid, dy: 0,
-            cells: [],
-            maxCells: 4
-        };
-
+        let snake = { x: 160, y: 160, dx: grid, dy: 0, cells: [], maxCells: 4 };
         let apple = { x: 320, y: 320 };
 
         // --- SES MOTORU ---
@@ -158,19 +179,15 @@
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            osc.connect(gain); gain.connect(audioCtx.destination);
             
             if (type === 'eat') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                osc.type = 'square'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); // Çok kısa klasik bip
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.05);
             } else if (type === 'crash') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.4);
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
@@ -178,11 +195,40 @@
             }
         }
 
-        // --- KONTROLLER (Hata Düzeltmeli) ---
+        // --- TAM EKRAN VE BAŞLATMA MANTIĞI ---
+        function startGame(fullscreen) {
+            initAudio(); // Tarayıcı ses kilidini aç
+            
+            if (fullscreen) {
+                let elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().then(() => lockPortrait()).catch(err => {});
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                    setTimeout(lockPortrait, 500);
+                }
+            }
+
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            
+            isGameRunning = true;
+            placeApple();
+            requestAnimationFrame(loop);
+        }
+
+        function lockPortrait() {
+            // Cihaz destekliyorsa ekranı dikey modda kilitler
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(function(error) {
+                    console.log("Ekran kilidi desteklenmiyor.");
+                });
+            }
+        }
+
+        // --- KONTROLLER ---
         function changeDirection(direction) {
-            initAudio(); 
-            // Eğer o karede zaten yön değiştiyse ikinci komutu yoksay (kendini yeme bug'ını çözer)
-            if (changingDirection) return;
+            if (changingDirection || !isGameRunning) return;
 
             if (direction === 'up' && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; changingDirection = true; }
             else if (direction === 'down' && snake.dy === 0) { snake.dy = grid; snake.dx = 0; changingDirection = true; }
@@ -202,13 +248,12 @@
             else if (e.which === 40) changeDirection('down');
         });
 
-        // --- YARDIMCI FONKSİYONLAR ---
+        // --- OYUN DÖNGÜSÜ YARDIMCILARI ---
         function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min)) + min; }
         
         function placeApple() {
             apple.x = getRandomInt(0, 20) * grid;
             apple.y = getRandomInt(0, 20) * grid;
-            // Elma yılanın üstünde çıktıysa tekrar yerleştir
             for (let i = 0; i < snake.cells.length; i++) {
                 if (apple.x === snake.cells[i].x && apple.y === snake.cells[i].y) {
                     placeApple(); break;
@@ -229,22 +274,21 @@
 
         // --- OYUN DÖNGÜSÜ ---
         function loop() {
-            if (isGameOver) return;
+            if (isGameOver || !isGameRunning) return;
             gameLoopId = requestAnimationFrame(loop);
 
-            // Hız kontrolü
             if (++frameCount < currentSpeed) return;
             
             frameCount = 0;
-            changingDirection = false; // Yılan hareket etti, kilit açıldı
+            changingDirection = false; 
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid(); // Retro ızgarayı çiz
+            drawGrid(); 
 
             snake.x += snake.dx;
             snake.y += snake.dy;
 
-            // Duvara çarpma (Klasik kural: Kenara çarparsan ölürsün)
+            // Duvara çarpma kontrolü
             if (snake.x < 0 || snake.x >= canvas.width || snake.y < 0 || snake.y >= canvas.height) {
                 gameOver(); return;
             }
@@ -252,17 +296,15 @@
             snake.cells.unshift({ x: snake.x, y: snake.y });
             if (snake.cells.length > snake.maxCells) snake.cells.pop();
 
-            // Elmayı çiz (Retro kırmızı kare)
+            // Elma çizimi
             ctx.fillStyle = '#ff003c';
             ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
 
-            // Yılanı çiz (Parlak yeşil)
+            // Yılan çizimi
             ctx.fillStyle = '#39ff14';
             snake.cells.forEach(function(cell, index) {
-                // Kafayı biraz daha koyu veya farklı yaparak belli edebiliriz ama klasik düz renktir
                 ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
 
-                // Yılan elma yedi mi?
                 if (cell.x === apple.x && cell.y === apple.y) {
                     snake.maxCells++;
                     score += 10;
@@ -270,13 +312,11 @@
                     playSound('eat');
                     placeApple();
                     
-                    // Zorluk eğrisi (Hızlanma): Her 50 puanda bir hızlanır, limit 3'e kadar düşer
                     if (score % 50 === 0 && currentSpeed > 3) {
                         currentSpeed--;
                     }
                 }
 
-                // Yılan kendini ısırdı mı?
                 for (let i = index + 1; i < snake.cells.length; i++) {
                     if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) gameOver();
                 }
@@ -285,6 +325,7 @@
 
         function gameOver() {
             isGameOver = true;
+            isGameRunning = false;
             playSound('crash');
             cancelAnimationFrame(gameLoopId);
             
@@ -302,21 +343,16 @@
         }
 
         window.resetGame = function() {
-            initAudio();
             snake.x = 160; snake.y = 160;
             snake.cells = []; snake.maxCells = 4;
             snake.dx = grid; snake.dy = 0;
             score = 0; currentSpeed = baseSpeed;
             scoreElement.innerText = score;
-            isGameOver = false; changingDirection = false;
+            isGameOver = false; isGameRunning = true; changingDirection = false;
             document.getElementById('game-over').style.display = 'none';
             placeApple();
             requestAnimationFrame(loop);
         }
-
-        // Başlangıç
-        placeApple();
-        requestAnimationFrame(loop);
     </script>
 </body>
 </html>
