@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mini Vadi: Hızlı Başlangıç</title>
+    <title>Mini Vadi: Kesintisiz Başlangıç</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -47,7 +47,7 @@
             pointer-events: auto; cursor: pointer; font-size: 1rem;
         }
 
-        /* Kontroller */
+        /* Joystick & Aksiyon Butonları */
         #joystick-zone {
             position: absolute; bottom: 30px; left: 40px; width: 140px; height: 140px;
             background: rgba(255, 255, 255, 0.1); border-radius: 50%;
@@ -66,8 +66,8 @@
             color: #fff; border-radius: 50%; font-weight: bold; display: flex;
             align-items: center; justify-content: center;
         }
-        #btn-attack { bottom: 0; left: 0; width: 90px; height: 90px; border-color: #e67e22; }
-        #btn-skill { top: 0; right: 0; width: 70px; height: 70px; border-color: #00ffff; }
+        #btn-attack { bottom: 0; left: 0; width: 90px; height: 90px; border-color: #e67e22; font-size: 1.1rem; }
+        #btn-skill { top: 0; right: 0; width: 70px; height: 70px; border-color: #00ffff; font-size: 0.9rem; }
         
         #xp-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 12px; background: #222; }
         #xp-bar { height: 100%; width: 0%; background: #9b59b6; }
@@ -75,7 +75,7 @@
         #respawn-text { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); font-size: 2rem; color: #e74c3c; display: none; }
     </style>
 </head>
-<body onload="initGame('adc')">
+<body onload="initGame()">
 
     <div id="portrait-warning">
         <svg viewBox="0 0 24 24"><path d="M16 1H8C6.9 1 6 1.9 6 3v18c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H8V5h8v14z"/></svg>
@@ -111,29 +111,39 @@
         }
         window.addEventListener('resize', resize);
 
-        const champs = { 'adc': { color: '#3498db', maxHp: 300, attackRange: 200, damage: 35, speed: 5.0, skillCooldown: 5, style: 'ranged', radius: 15 } };
-        let player = { level: 1, xp: 0, maxXp: 100, isDead: false, respawnTimer: 0, facingAngle: 0, skillReady: true };
+        // Manyak Nişancı statlarını varsayılan yaptık
+        let player = { 
+            color: '#3498db', maxHp: 300, hp: 300, attackRange: 210, damage: 38, speed: 5.2, 
+            skillCooldown: 5, style: 'ranged', radius: 15, level: 1, xp: 0, maxXp: 100, 
+            isDead: false, respawnTimer: 0, facingAngle: 0, skillReady: true 
+        };
+
         let nexus = { x: 0, y: 0, hp: 1500, maxHp: 1500, radius: 45 };
         let entities = [], projectiles = [], particles = [], floatingTexts = [], bushes = [];
         let frame = 0, gold = 0;
 
-        function initGame(champId) {
+        function initGame() {
             resize();
-            Object.assign(player, champs[champId]);
-            player.hp = player.maxHp;
-            player.x = nexus.x; player.y = nexus.y + 120;
-            bushes = [{ x: canvas.width*0.2, y: canvas.height*0.2, radius: 80 }, { x: canvas.width*0.8, y: canvas.height*0.8, radius: 80 }];
+            player.x = nexus.x; 
+            player.y = nexus.y + 120;
+            bushes = [
+                { x: canvas.width*0.2, y: canvas.height*0.2, radius: 80 }, 
+                { x: canvas.width*0.8, y: canvas.height*0.8, radius: 80 }
+            ];
             gameState = 'PLAYING';
-            loop();
+            loop(); // Oyun direkt başlıyor
         }
 
-        // Pointer Events (Dokunmatik Sorunsuz Çözüm)
+        // --- KONTROLLER ---
         const joyZone = document.getElementById('joystick-zone');
         let joyX = 0, joyY = 0, isMoving = false;
 
         joyZone.addEventListener('pointerdown', e => { isMoving = true; handleJoy(e); });
         window.addEventListener('pointermove', e => { if(isMoving) handleJoy(e); });
-        window.addEventListener('pointerup', () => { isMoving = false; joyX = 0; joyY = 0; document.getElementById('stick').style.transform = 'translate(0,0)'; });
+        window.addEventListener('pointerup', () => { 
+            isMoving = false; joyX = 0; joyY = 0; 
+            document.getElementById('stick').style.transform = 'translate(0,0)'; 
+        });
 
         function handleJoy(e) {
             let rect = joyZone.getBoundingClientRect();
@@ -145,6 +155,7 @@
             if(dist > 5) player.facingAngle = angle;
         }
 
+        // Saldırı Butonları
         document.getElementById('btn-attack').addEventListener('pointerdown', () => {
             if(player.isDead) return;
             let target = null, minDist = player.attackRange;
@@ -153,20 +164,24 @@
                 if(d < minDist) { minDist = d; target = e; }
             });
             if(target) {
-                projectiles.push({ x: player.x, y: player.y, target: target, speed: 15, damage: player.damage, type: 'basic' });
+                projectiles.push({ x: player.x, y: player.y, target: target, speed: 16, damage: player.damage, type: 'basic' });
                 player.facingAngle = Math.atan2(target.y - player.y, target.x - player.x);
             }
         });
 
         document.getElementById('btn-skill').addEventListener('pointerdown', () => {
             if(player.isDead || !player.skillReady) return;
-            projectiles.push({ x: player.x, y: player.y, vx: Math.cos(player.facingAngle)*12, vy: Math.sin(player.facingAngle)*12, damage: player.damage*2.5, type: 'rocket', life: 70 });
+            projectiles.push({ 
+                x: player.x, y: player.y, vx: Math.cos(player.facingAngle)*13, 
+                vy: Math.sin(player.facingAngle)*13, damage: player.damage*3, 
+                type: 'rocket', life: 75 
+            });
             player.skillReady = false;
             document.getElementById('btn-skill').style.opacity = '0.4';
             setTimeout(() => { player.skillReady = true; document.getElementById('btn-skill').style.opacity = '1'; }, 5000);
         });
 
-        function buyItem() { if(gold >= 50) { gold -= 50; player.damage += 10; } }
+        function buyItem() { if(gold >= 50) { gold -= 50; player.damage += 12; } }
 
         function update() {
             if(nexus.hp <= 0) return;
@@ -175,47 +190,81 @@
                 player.y = Math.max(15, Math.min(canvas.height-15, player.y + joyY * player.speed));
             }
 
-            if(frame % 200 === 0) {
-                entities.push({ x: Math.random()*canvas.width, y: -20, radius: 15, hp: 60+(frame/50), maxHp: 60+(frame/50), speed: 1.5, damage: 5 });
+            // Minyon Spawn
+            if(frame % 220 === 0) {
+                entities.push({ 
+                    x: Math.random()*canvas.width, y: -20, radius: 15, 
+                    hp: 70+(frame/45), maxHp: 70+(frame/45), speed: 1.6, damage: 6 
+                });
             }
 
             entities.forEach((e, i) => {
                 let dx = nexus.x - e.x, dy = nexus.y - e.y, dist = Math.hypot(dx, dy);
                 if(dist > 50) { e.x += (dx/dist)*e.speed; e.y += (dy/dist)*e.speed; }
                 else if(frame % 40 === 0) nexus.hp -= e.damage;
-                if(e.hp <= 0) { entities.splice(i, 1); gold += 20; player.xp += 25; }
+                if(e.hp <= 0) { 
+                    entities.splice(i, 1); 
+                    gold += 20; player.xp += 30; 
+                    addFloatingText(e.x, e.y, "+20G", "#f1c40f");
+                }
             });
 
             projectiles.forEach((p, i) => {
                 if(p.type === 'basic') {
+                    if(!entities.includes(p.target)) { projectiles.splice(i,1); return; }
                     let d = Math.hypot(p.target.x - p.x, p.target.y - p.y);
-                    if(d < 20) { p.target.hp -= p.damage; projectiles.splice(i, 1); }
+                    if(d < 25) { p.target.hp -= p.damage; projectiles.splice(i, 1); }
                     else { p.x += ((p.target.x-p.x)/d)*p.speed; p.y += ((p.target.y-p.y)/d)*p.speed; }
-                } else { p.x += p.vx; p.y += p.vy; p.life--; 
-                    entities.forEach(e => { if(Math.hypot(e.x-p.x, e.y-p.y) < 30) { e.hp -= p.damage; p.life = 0; } });
+                } else { 
+                    p.x += p.vx; p.y += p.vy; p.life--; 
+                    entities.forEach(e => { 
+                        if(Math.hypot(e.x-p.x, e.y-p.y) < 35) { e.hp -= p.damage; p.life = 0; } 
+                    });
                     if(p.life <= 0) projectiles.splice(i, 1);
                 }
             });
 
-            if(player.xp >= player.maxXp) { player.level++; player.xp = 0; player.maxXp *= 1.4; player.damage += 5; }
+            if(player.xp >= player.maxXp) { 
+                player.level++; player.xp = 0; player.maxXp *= 1.45; player.damage += 7; 
+                addFloatingText(player.x, player.y - 40, "LEVEL UP!", "#fff");
+            }
+
             document.getElementById('tower-hp').innerText = Math.floor(nexus.hp);
             document.getElementById('gold').innerText = gold;
             document.getElementById('lvl').innerText = player.level;
             document.getElementById('xp-bar').style.width = (player.xp/player.maxXp*100)+'%';
+            
+            floatingTexts.forEach((t, i) => { t.y -= 1; t.life--; if(t.life <= 0) floatingTexts.splice(i, 1); });
             frame++;
         }
 
+        function addFloatingText(x, y, text, color) { floatingTexts.push({ x, y, text, color, life: 40 }); }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            bushes.forEach(b => { ctx.fillStyle='rgba(0,255,0,0.1)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill(); });
+            bushes.forEach(b => { ctx.fillStyle='rgba(39, 174, 96, 0.15)'; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill(); });
+            
+            // Üs (Nexus)
             ctx.fillStyle = '#2980b9'; ctx.beginPath(); ctx.arc(nexus.x, nexus.y, nexus.radius, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#3498db'; ctx.lineWidth = 4; ctx.stroke();
+
+            // Karakter
             if(!player.isDead) {
                 ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.facingAngle);
                 ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = '#fff'; ctx.fillRect(10, -3, 8, 6); ctx.restore();
             }
-            entities.forEach(e => { ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2); ctx.fill(); });
-            projectiles.forEach(p => { ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill(); });
+
+            entities.forEach(e => { 
+                ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2); ctx.fill(); 
+            });
+
+            projectiles.forEach(p => { 
+                ctx.fillStyle = p.type === 'basic' ? '#f1c40f' : '#e74c3c'; 
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.type === 'basic' ? 5 : 12, 0, Math.PI*2); ctx.fill(); 
+            });
+
+            floatingTexts.forEach(t => { ctx.fillStyle = t.color; ctx.font = "bold 16px Arial"; ctx.fillText(t.text, t.x, t.y); });
         }
 
         function loop() { update(); draw(); requestAnimationFrame(loop); }
