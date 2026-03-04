@@ -19,12 +19,12 @@
         }
         .top-bar {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            text-align: center; font-weight: bold; text-shadow: 1px 1px 3px #000;
+            text-align: center; font-weight: bold; text-shadow: 1px 1px 3px #000; width: 100%;
         }
         #btn-shop {
-            position: absolute; top: 15px; right: 20px; background: #f1c40f; color: #000;
+            position: absolute; top: 40px; right: 20px; background: #f1c40f; color: #000;
             padding: 8px 12px; font-weight: bold; border-radius: 5px; border: 2px solid #d4ac0d;
-            pointer-events: auto; cursor: pointer;
+            pointer-events: auto; cursor: pointer; font-size: 14px;
         }
         
         /* XP Bar */
@@ -41,21 +41,23 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10, 15, 10, 0.95); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 50; pointer-events: auto;
+            overflow-y: auto; touch-action: auto; /* Mobilde kaydırma eklendi */
         }
         .champ-card {
             background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 10px;
-            padding: 15px; margin: 10px; width: 80%; max-width: 300px; text-align: center;
+            padding: 10px; margin: 8px; width: 85%; max-width: 300px; text-align: center;
         }
-        .champ-card h3 { margin: 0 0 10px 0; color: #f1c40f; }
-        .champ-card p { font-size: 13px; color: #ccc; margin-bottom: 10px; }
+        .champ-card h3 { margin: 0 0 5px 0; color: #f1c40f; font-size: 1.1rem; }
+        .champ-card p { font-size: 12px; color: #ccc; margin-bottom: 8px; }
         .btn-select {
-            background: #27ae60; color: #fff; border: none; padding: 10px 20px;
-            border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;
+            background: #27ae60; color: #fff; border: none; padding: 12px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1rem;
         }
+        .btn-select:active { background: #2ecc71; transform: scale(0.98); }
 
         /* Kontroller */
         #joystick-zone {
-            position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
+            position: absolute; bottom: 30px; left: 20px; width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.1); border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2); pointer-events: auto;
         }
@@ -64,40 +66,40 @@
             background: rgba(100, 200, 255, 0.6); border-radius: 50%; pointer-events: none;
         }
         #action-zone {
-            position: absolute; bottom: 30px; right: 30px; width: 150px; height: 150px; pointer-events: auto;
+            position: absolute; bottom: 30px; right: 20px; width: 140px; height: 140px; pointer-events: auto;
         }
         .btn-action {
             position: absolute; background: rgba(0, 0, 0, 0.6); border: 2px solid #fff;
             color: #fff; border-radius: 50%; font-weight: bold; display: flex;
             align-items: center; justify-content: center;
         }
-        #btn-attack { bottom: 0; left: 0; width: 75px; height: 75px; border-color: #e67e22; }
-        #btn-skill { top: 0; right: 0; width: 60px; height: 60px; border-color: #00ffff; font-size: 12px;}
+        #btn-attack { bottom: 0; left: 0; width: 75px; height: 75px; border-color: #e67e22; font-size: 14px;}
+        #btn-skill { top: 0; right: 0; width: 60px; height: 60px; border-color: #00ffff; font-size: 11px;}
         #respawn-text {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 30px; color: #e74c3c; font-weight: bold; display: none; text-shadow: 2px 2px 5px #000;
+            font-size: 24px; color: #e74c3c; font-weight: bold; display: none; text-shadow: 2px 2px 5px #000; text-align:center;
         }
     </style>
 </head>
 <body>
 
     <div id="champ-select" class="overlay">
-        <h2 style="color:#00ffff;">ŞAMPİYONUNU SEÇ</h2>
+        <h2 style="color:#00ffff; margin-bottom: 10px;">ŞAMPİYONUNU SEÇ</h2>
         
         <div class="champ-card">
             <h3>Manyak Nişancı</h3>
             <p>Uzun menzil. Yetenek: Alan Hasarlı Roket.</p>
-            <button class="btn-select" onclick="startGame('adc')">SEÇ</button>
+            <button class="btn-select" ontouchstart="startGame('adc', event)" onclick="startGame('adc', event)">SEÇ</button>
         </div>
         <div class="champ-card">
             <h3>Patron</h3>
             <p>Yüksek can. Yetenek: Konik Alan Yumruğu.</p>
-            <button class="btn-select" onclick="startGame('bruiser')">SEÇ</button>
+            <button class="btn-select" ontouchstart="startGame('bruiser', event)" onclick="startGame('bruiser', event)">SEÇ</button>
         </div>
         <div class="champ-card">
             <h3>Mahvolmuş</h3>
             <p>Can çalma pasifi. Yetenek: Delip geçen kılıç dalgası.</p>
-            <button class="btn-select" onclick="startGame('king')">SEÇ</button>
+            <button class="btn-select" ontouchstart="startGame('king', event)" onclick="startGame('king', event)">SEÇ</button>
         </div>
     </div>
 
@@ -106,7 +108,7 @@
             Kule: <span id="tower-hp" style="color:#2ecc71;">1500</span> | 
             Altın: <span id="gold" style="color:#f1c40f;">0</span>
         </div>
-        <div id="btn-shop" onclick="buyItem()">⚔️ +10 Hasar (50G)</div>
+        <div id="btn-shop" ontouchstart="buyItem(event)" onclick="buyItem(event)">⚔️ +10 Hasar (50G)</div>
         
         <div id="level-text">Seviye: <span id="lvl">1</span></div>
         <div id="xp-bar-container"><div id="xp-bar"></div></div>
@@ -130,6 +132,7 @@
         let gameState = 'SELECT';
         let frame = 0;
         let gold = 0;
+        let gameStarted = false; // Çift tıklama hatasını önlemek için
 
         // --- ŞAMPİYON VERİTABANI ---
         const champs = {
@@ -146,7 +149,11 @@
         let particles = [];
         let floatingTexts = [];
 
-        function startGame(champId) {
+        function startGame(champId, e) {
+            if(e) e.preventDefault(); // Telefonun dokunmayı "kaydırma" sanmasını engeller
+            if(gameStarted) return;
+            gameStarted = true;
+
             document.getElementById('champ-select').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
             
@@ -154,12 +161,11 @@
             nexus.y = canvas.height / 2;
             
             let base = champs[champId];
-            Object.assign(player, base); // Şampiyon özelliklerini aktar
+            Object.assign(player, base); 
             player.x = nexus.x; player.y = nexus.y + 100;
             player.hp = player.maxHp;
             player.champId = champId;
             
-            // Çalıları oluştur
             bushes = [
                 { x: canvas.width/4, y: canvas.height/4, radius: 60 },
                 { x: canvas.width*0.75, y: canvas.height*0.75, radius: 80 }
@@ -175,6 +181,7 @@
         
         document.getElementById('joystick-zone').addEventListener('touchstart', e => {
             if(player.isDead) return;
+            e.preventDefault();
             let rect = e.target.getBoundingClientRect();
             joyOriginX = rect.left + 60; joyOriginY = rect.top + 60;
             isMoving = true; handleMove(e.touches[0]);
@@ -182,8 +189,8 @@
         document.getElementById('joystick-zone').addEventListener('touchmove', e => {
             e.preventDefault(); if(isMoving) handleMove(e.touches[0]);
         });
-        document.getElementById('joystick-zone').addEventListener('touchend', () => {
-            isMoving = false; joyX = 0; joyY = 0; stick.style.transform = `translate(0px, 0px)`;
+        document.getElementById('joystick-zone').addEventListener('touchend', e => {
+            e.preventDefault(); isMoving = false; joyX = 0; joyY = 0; stick.style.transform = `translate(0px, 0px)`;
         });
 
         function handleMove(t) {
@@ -209,14 +216,13 @@
                 if(player.style === 'ranged') {
                     projectiles.push({ x: player.x, y: player.y, target: target, speed: 12, damage: player.damage, type: 'basic' });
                 } else {
-                    // Yakın dövüş anında hasar vurur
                     target.hp -= player.damage;
                     createParticles(target.x, target.y, '#fff', 3);
                     addFloatingText(target.x, target.y, player.damage, '#fff');
                     if(player.lifesteal) healPlayer(player.damage * player.lifesteal);
                 }
                 player.facingAngle = Math.atan2(target.y - player.y, target.x - player.x);
-                player.inBush = false; // Vurunca görünmezlik bozulur
+                player.inBush = false;
             }
         });
 
@@ -225,10 +231,8 @@
             
             let angle = player.facingAngle;
             if(player.style === 'ranged') {
-                // Roket (Çarpınca Alan Hasarı)
                 projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*10, vy: Math.sin(angle)*10, damage: player.damage*2, type: 'rocket', life: 60 });
             } else if(player.style === 'cone') {
-                // Sett Yumruğu (Koni Hasarı)
                 createParticles(player.x + Math.cos(angle)*40, player.y + Math.sin(angle)*40, '#f39c12', 15);
                 entities.forEach(e => {
                     let d = Math.hypot(e.x - player.x, e.y - player.y);
@@ -241,7 +245,6 @@
                     }
                 });
             } else if(player.style === 'pierce') {
-                // Viego Kılıç (Delip Geçen)
                 projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*12, vy: Math.sin(angle)*12, damage: player.damage*1.5, type: 'pierce', life: 40 });
             }
 
@@ -251,7 +254,8 @@
             player.inBush = false;
         });
 
-        function buyItem() {
+        function buyItem(e) {
+            if(e) e.preventDefault();
             if(gold >= 50) { gold -= 50; player.damage += 10; updateUI(); }
         }
 
@@ -303,10 +307,8 @@
         function update() {
             if(nexus.hp <= 0) return;
 
-            // Çalı Kontrolü
             player.inBush = bushes.some(b => Math.hypot(player.x - b.x, player.y - b.y) < b.radius);
 
-            // Oyuncu Hareketi ve Dirilme
             if(player.isDead) {
                 player.respawnTimer--;
                 if(player.respawnTimer <= 0) {
@@ -316,16 +318,14 @@
             } else {
                 player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + joyX * player.speed));
                 player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + joyY * player.speed));
-                if(frame % 60 === 0 && player.hp < player.maxHp) healPlayer(2); // Pasif yenilenme
+                if(frame % 60 === 0 && player.hp < player.maxHp) healPlayer(2); 
             }
 
-            // Minyon Yapay Zekası
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
                 let distToNexus = Math.hypot(nexus.x - e.x, nexus.y - e.y);
                 let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
                 
-                // Aggro sistemi
                 let target = nexus;
                 if(!player.isDead && !player.inBush && distToPlayer < 150) target = player;
 
@@ -351,7 +351,6 @@
             }
             updateUI();
 
-            // Mermiler ve Yetenekler
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 let p = projectiles[i];
                 if(p.type === 'basic') {
@@ -366,21 +365,19 @@
                     } else {
                         p.x += ((p.target.x - p.x)/dist) * p.speed; p.y += ((p.target.y - p.y)/dist) * p.speed;
                     }
-                } else { // Yetenek Atışları
+                } else { 
                     p.x += p.vx; p.y += p.vy; p.life--;
                     let hit = false;
                     entities.forEach(e => {
                         if(Math.hypot(e.x - p.x, e.y - p.y) < e.radius + 15) {
                             if(p.type === 'rocket' && !hit) {
-                                // Patlama Alanı
                                 hit = true; createParticles(p.x, p.y, '#e74c3c', 20);
                                 entities.forEach(e2 => {
                                     if(Math.hypot(e2.x - p.x, e2.y - p.y) < 80) { e2.hp -= p.damage; addFloatingText(e2.x, e2.y, p.damage, '#e74c3c'); }
                                 });
                                 projectiles.splice(i, 1);
                             } else if(p.type === 'pierce') {
-                                // Delip Geçme (Aynı mermi bir karaktere birden fazla vurmasın diye array eklenebilir ama basit tuttuk)
-                                e.hp -= p.damage/10; // Her frame az az vurur geçerken
+                                e.hp -= p.damage/10; 
                                 createParticles(e.x, e.y, '#1abc9c', 1);
                                 if(player.lifesteal) healPlayer((p.damage/10) * player.lifesteal);
                             }
@@ -390,7 +387,6 @@
                 }
             }
 
-            // Efekt Güncellemeleri
             particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life--; if(p.life<=0) particles.splice(i,1); });
             floatingTexts.forEach((t, i) => { t.y += t.vy; t.life--; if(t.life<=0) floatingTexts.splice(i,1); });
 
@@ -401,14 +397,14 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Çalılar
             bushes.forEach(b => {
                 ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
                 ctx.fillStyle = 'rgba(39, 174, 96, 0.3)'; ctx.fill();
             });
 
-            // Üs (Nexus)
             ctx.beginPath(); ctx.arc(nexus.x, nexus.y, nexus.radius, 0, Math.PI*2);
             ctx.fillStyle = '#2980b9'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#3498db'; ctx.stroke();
             ctx.fillStyle = '#000'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60, 8);
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60 * (nexus.hp
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60 * (nexus.hp/nexus.maxHp), 8);
+
+           
