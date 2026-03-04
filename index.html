@@ -2,413 +2,321 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Vadi: Efsaneler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Klasik Yılan (Retro Snake)</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            margin: 0; overflow: hidden; background-color: #1e3623; color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none; user-select: none;
+            margin: 0; padding: 0;
+            background-color: #1a1a24; /* Atari siyahı */
+            color: #ecf0f1;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            height: 100vh; overflow: hidden; touch-action: none;
+            user-select: none; -webkit-user-select: none;
         }
-        canvas { display: block; }
-        .hidden { display: none !important; }
 
-        /* Arayüz */
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+        #game-header {
+            margin-top: 15px; width: 100%; text-align: center;
         }
-        .top-bar {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            text-align: center; font-weight: bold; text-shadow: 1px 1px 3px #000;
-        }
-        #btn-shop {
-            position: absolute; top: 15px; right: 20px; background: #f1c40f; color: #000;
-            padding: 8px 12px; font-weight: bold; border-radius: 5px; border: 2px solid #d4ac0d;
-            pointer-events: auto; cursor: pointer;
-        }
+
+        h1 { margin: 0; font-size: 28px; color: #39ff14; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); letter-spacing: 2px; }
         
-        /* XP Bar */
-        #xp-bar-container {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 10px; background: #222;
+        #score-board { 
+            font-size: 18px; font-weight: bold; margin-top: 10px; 
+            background: rgba(255,255,255,0.05); padding: 8px 20px;
+            border-radius: 5px; border: 1px solid #333; display: inline-block;
         }
-        #xp-bar { height: 100%; width: 0%; background: #9b59b6; transition: width 0.3s; }
-        #level-text {
-            position: absolute; bottom: 12px; left: 5px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000;
+        .highlight { color: #f1c40f; }
+
+        /* Oyun Ekranı */
+        #canvas-container {
+            margin-top: 10px;
+            padding: 5px;
+            background: #333;
+            border-radius: 5px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.8);
+        }
+        canvas {
+            background-color: #0f1c0f; /* Retro yeşilimsı siyah */
+            display: block;
         }
 
-        /* Menüler */
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 15, 10, 0.95); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50; pointer-events: auto;
-        }
-        .champ-card {
-            background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 10px;
-            padding: 15px; margin: 10px; width: 80%; max-width: 300px; text-align: center;
-        }
-        .champ-card h3 { margin: 0 0 10px 0; color: #f1c40f; }
-        .champ-card p { font-size: 13px; color: #ccc; margin-bottom: 10px; }
-        .btn-select {
-            background: #27ae60; color: #fff; border: none; padding: 10px 20px;
-            border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;
+        /* Sanal Konsol (D-Pad) */
+        #controls {
+            display: grid;
+            grid-template-columns: 70px 70px 70px;
+            grid-template-rows: 70px 70px 70px;
+            gap: 12px; margin-bottom: 25px;
         }
 
-        /* Kontroller */
-        #joystick-zone {
-            position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
-            background: rgba(255, 255, 255, 0.1); border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.2); pointer-events: auto;
+        .btn {
+            background-color: #2c3e50; border: 2px solid #1a252f;
+            border-radius: 12px; color: rgba(255,255,255,0.7);
+            font-size: 28px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #151e27; cursor: pointer;
         }
-        #stick {
-            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
-            background: rgba(100, 200, 255, 0.6); border-radius: 50%; pointer-events: none;
+        .btn:active {
+            transform: translateY(6px); box-shadow: none;
+            background-color: #39ff14; color: #000; border-color: #39ff14;
         }
-        #action-zone {
-            position: absolute; bottom: 30px; right: 30px; width: 150px; height: 150px; pointer-events: auto;
+
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 3; }
+
+        /* Oyun Sonu Ekranı */
+        #game-over {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: rgba(10, 10, 15, 0.95);
+            padding: 30px; border: 3px solid #ff003c; border-radius: 10px;
+            text-align: center; z-index: 10; width: 80%; max-width: 300px;
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.4);
         }
-        .btn-action {
-            position: absolute; background: rgba(0, 0, 0, 0.6); border: 2px solid #fff;
-            color: #fff; border-radius: 50%; font-weight: bold; display: flex;
-            align-items: center; justify-content: center;
+
+        #game-over h2 { color: #ff003c; margin-top: 0; font-size: 26px; }
+        #final-score { font-size: 18px; line-height: 1.5; color: #ccc; }
+        
+        #restart-btn {
+            background-color: #39ff14; color: #000; border: none;
+            padding: 15px 20px; font-size: 18px; font-weight: bold;
+            border-radius: 5px; margin-top: 20px; cursor: pointer; width: 100%;
+            text-transform: uppercase;
         }
-        #btn-attack { bottom: 0; left: 0; width: 75px; height: 75px; border-color: #e67e22; }
-        #btn-skill { top: 0; right: 0; width: 60px; height: 60px; border-color: #00ffff; font-size: 12px;}
-        #respawn-text {
-            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 30px; color: #e74c3c; font-weight: bold; display: none; text-shadow: 2px 2px 5px #000;
-        }
+        #restart-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-    <div id="champ-select" class="overlay">
-        <h2 style="color:#00ffff;">ŞAMPİYONUNU SEÇ</h2>
-        
-        <div class="champ-card">
-            <h3>Manyak Nişancı</h3>
-            <p>Uzun menzil. Yetenek: Alan Hasarlı Roket.</p>
-            <button class="btn-select" onclick="startGame('adc')">SEÇ</button>
-        </div>
-        <div class="champ-card">
-            <h3>Patron</h3>
-            <p>Yüksek can. Yetenek: Konik Alan Yumruğu.</p>
-            <button class="btn-select" onclick="startGame('bruiser')">SEÇ</button>
-        </div>
-        <div class="champ-card">
-            <h3>Mahvolmuş</h3>
-            <p>Can çalma pasifi. Yetenek: Delip geçen kılıç dalgası.</p>
-            <button class="btn-select" onclick="startGame('king')">SEÇ</button>
+    <div id="game-header">
+        <h1>S N A K E</h1>
+        <div id="score-board">
+            SKOR: <span id="score" style="color:#fff;">0</span> &nbsp;|&nbsp; REKOR: <span id="high-score" class="highlight">0</span>
         </div>
     </div>
 
-    <div id="ui-layer" class="hidden">
-        <div class="top-bar">
-            Kule: <span id="tower-hp" style="color:#2ecc71;">1500</span> | 
-            Altın: <span id="gold" style="color:#f1c40f;">0</span>
-        </div>
-        <div id="btn-shop" onclick="buyItem()">⚔️ +10 Hasar (50G)</div>
-        
-        <div id="level-text">Seviye: <span id="lvl">1</span></div>
-        <div id="xp-bar-container"><div id="xp-bar"></div></div>
-        <div id="respawn-text">YENİDEN DOĞUYORSUN...</div>
-
-        <div id="joystick-zone"><div id="stick"></div></div>
-        <div id="action-zone">
-            <div id="btn-attack" class="btn-action">VUR</div>
-            <div id="btn-skill" class="btn-action">YETENEK</div>
-        </div>
+    <div id="canvas-container">
+        <canvas id="gameCanvas" width="320" height="320"></canvas>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <div class="btn" id="btn-up">▲</div>
+        <div class="btn" id="btn-left">◀</div>
+        <div class="btn" id="btn-right">▶</div>
+        <div class="btn" id="btn-down">▼</div>
+    </div>
+
+    <div id="game-over">
+        <h2>OYUN BİTTİ</h2>
+        <div id="final-score">Skorun: 0</div>
+        <button id="restart-btn" onclick="resetGame()">YENİDEN BAŞLA</button>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('high-score');
+        const finalScoreElement = document.getElementById('final-score');
+        
+        // --- OYUN AYARLARI ---
+        const grid = 16;
+        let gameLoopId;
+        let isGameOver = false;
+        
+        let score = 0;
+        let highScore = localStorage.getItem('retroSnakeHighScore') || 0;
+        highScoreElement.innerText = highScore;
 
-        let gameState = 'SELECT';
-        let frame = 0;
-        let gold = 0;
+        // Hız kontrolü (sayı küçüldükçe oyun hızlanır)
+        let baseSpeed = 10; 
+        let currentSpeed = baseSpeed;
+        let frameCount = 0;
+        let changingDirection = false; // Bug fix için kilit
 
-        // --- ŞAMPİYON VERİTABANI ---
-        const champs = {
-            'adc': { color: '#3498db', maxHp: 300, attackRange: 180, damage: 30, speed: 4.5, skillCooldown: 5, style: 'ranged', radius: 14 },
-            'bruiser': { color: '#e74c3c', maxHp: 700, attackRange: 70, damage: 45, speed: 4.0, skillCooldown: 6, style: 'cone', radius: 18 },
-            'king': { color: '#1abc9c', maxHp: 450, attackRange: 80, damage: 35, speed: 4.8, skillCooldown: 4, style: 'pierce', radius: 15, lifesteal: 0.2 }
+        let snake = {
+            x: 160, y: 160, // Ekranın ortası
+            dx: grid, dy: 0,
+            cells: [],
+            maxCells: 4
         };
 
-        let player = { x: 0, y: 0, hp: 0, maxHp: 0, level: 1, xp: 0, maxXp: 100, isDead: false, respawnTimer: 0, inBush: false, facingAngle: 0, skillReady: true };
-        let nexus = { x: 0, y: 0, hp: 1500, maxHp: 1500, radius: 45 };
-        let bushes = [];
-        let entities = [];
-        let projectiles = [];
-        let particles = [];
-        let floatingTexts = [];
+        let apple = { x: 320, y: 320 };
 
-        function startGame(champId) {
-            document.getElementById('champ-select').classList.add('hidden');
-            document.getElementById('ui-layer').classList.remove('hidden');
-            
-            nexus.x = canvas.width / 2;
-            nexus.y = canvas.height / 2;
-            
-            let base = champs[champId];
-            Object.assign(player, base); // Şampiyon özelliklerini aktar
-            player.x = nexus.x; player.y = nexus.y + 100;
-            player.hp = player.maxHp;
-            player.champId = champId;
-            
-            // Çalıları oluştur
-            bushes = [
-                { x: canvas.width/4, y: canvas.height/4, radius: 60 },
-                { x: canvas.width*0.75, y: canvas.height*0.75, radius: 80 }
-            ];
+        // --- SES MOTORU ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
 
-            gameState = 'PLAYING';
-            loop();
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // --- KONTROLLER ---
-        const stick = document.getElementById('stick');
-        let joyX = 0, joyY = 0, isMoving = false, joyOriginX = 0, joyOriginY = 0;
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'eat') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); // Çok kısa klasik bip
+                osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'crash') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // --- KONTROLLER (Hata Düzeltmeli) ---
+        function changeDirection(direction) {
+            initAudio(); 
+            // Eğer o karede zaten yön değiştiyse ikinci komutu yoksay (kendini yeme bug'ını çözer)
+            if (changingDirection) return;
+
+            if (direction === 'up' && snake.dy === 0) { snake.dy = -grid; snake.dx = 0; changingDirection = true; }
+            else if (direction === 'down' && snake.dy === 0) { snake.dy = grid; snake.dx = 0; changingDirection = true; }
+            else if (direction === 'left' && snake.dx === 0) { snake.dx = -grid; snake.dy = 0; changingDirection = true; }
+            else if (direction === 'right' && snake.dx === 0) { snake.dx = grid; snake.dy = 0; changingDirection = true; }
+        }
+
+        document.getElementById('btn-up').addEventListener('pointerdown', (e) => { e.preventDefault(); changeDirection('up'); });
+        document.getElementById('btn-down').addEventListener('pointerdown', (e) => { e.preventDefault(); changeDirection('down'); });
+        document.getElementById('btn-left').addEventListener('pointerdown', (e) => { e.preventDefault(); changeDirection('left'); });
+        document.getElementById('btn-right').addEventListener('pointerdown', (e) => { e.preventDefault(); changeDirection('right'); });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.which === 37) changeDirection('left');
+            else if (e.which === 38) changeDirection('up');
+            else if (e.which === 39) changeDirection('right');
+            else if (e.which === 40) changeDirection('down');
+        });
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min)) + min; }
         
-        document.getElementById('joystick-zone').addEventListener('touchstart', e => {
-            if(player.isDead) return;
-            let rect = e.target.getBoundingClientRect();
-            joyOriginX = rect.left + 60; joyOriginY = rect.top + 60;
-            isMoving = true; handleMove(e.touches[0]);
-        });
-        document.getElementById('joystick-zone').addEventListener('touchmove', e => {
-            e.preventDefault(); if(isMoving) handleMove(e.touches[0]);
-        });
-        document.getElementById('joystick-zone').addEventListener('touchend', () => {
-            isMoving = false; joyX = 0; joyY = 0; stick.style.transform = `translate(0px, 0px)`;
-        });
-
-        function handleMove(t) {
-            let dx = t.clientX - joyOriginX, dy = t.clientY - joyOriginY;
-            let dist = Math.min(Math.sqrt(dx*dx + dy*dy), 35);
-            let angle = Math.atan2(dy, dx);
-            stick.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
-            joyX = Math.cos(angle)*dist/35; joyY = Math.sin(angle)*dist/35;
-            if(Math.abs(joyX)>0.1 || Math.abs(joyY)>0.1) player.facingAngle = angle;
-        }
-
-        // --- SAVAŞ SİSTEMİ ---
-        document.getElementById('btn-attack').addEventListener('touchstart', e => {
-            e.preventDefault(); if(player.isDead) return;
-            
-            let target = null, minDist = player.attackRange;
-            entities.forEach(e => {
-                let dist = Math.hypot(e.x - player.x, e.y - player.y) - e.radius;
-                if(dist < minDist) { minDist = dist; target = e; }
-            });
-
-            if(target) {
-                if(player.style === 'ranged') {
-                    projectiles.push({ x: player.x, y: player.y, target: target, speed: 12, damage: player.damage, type: 'basic' });
-                } else {
-                    // Yakın dövüş anında hasar vurur
-                    target.hp -= player.damage;
-                    createParticles(target.x, target.y, '#fff', 3);
-                    addFloatingText(target.x, target.y, player.damage, '#fff');
-                    if(player.lifesteal) healPlayer(player.damage * player.lifesteal);
+        function placeApple() {
+            apple.x = getRandomInt(0, 20) * grid;
+            apple.y = getRandomInt(0, 20) * grid;
+            // Elma yılanın üstünde çıktıysa tekrar yerleştir
+            for (let i = 0; i < snake.cells.length; i++) {
+                if (apple.x === snake.cells[i].x && apple.y === snake.cells[i].y) {
+                    placeApple(); break;
                 }
-                player.facingAngle = Math.atan2(target.y - player.y, target.x - player.x);
-                player.inBush = false; // Vurunca görünmezlik bozulur
             }
-        });
+        }
 
-        document.getElementById('btn-skill').addEventListener('touchstart', e => {
-            e.preventDefault(); if(player.isDead || !player.skillReady) return;
-            
-            let angle = player.facingAngle;
-            if(player.style === 'ranged') {
-                // Roket (Çarpınca Alan Hasarı)
-                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*10, vy: Math.sin(angle)*10, damage: player.damage*2, type: 'rocket', life: 60 });
-            } else if(player.style === 'cone') {
-                // Sett Yumruğu (Koni Hasarı)
-                createParticles(player.x + Math.cos(angle)*40, player.y + Math.sin(angle)*40, '#f39c12', 15);
-                entities.forEach(e => {
-                    let d = Math.hypot(e.x - player.x, e.y - player.y);
-                    let a = Math.atan2(e.y - player.y, e.x - player.x);
-                    let angleDiff = Math.abs(a - angle);
-                    if(angleDiff > Math.PI) angleDiff = 2*Math.PI - angleDiff;
-                    if(d < 120 && angleDiff < 0.8) {
-                        e.hp -= player.damage * 2.5;
-                        addFloatingText(e.x, e.y, player.damage * 2.5, '#e74c3c');
-                    }
-                });
-            } else if(player.style === 'pierce') {
-                // Viego Kılıç (Delip Geçen)
-                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*12, vy: Math.sin(angle)*12, damage: player.damage*1.5, type: 'pierce', life: 40 });
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += grid) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
             }
-
-            player.skillReady = false;
-            document.getElementById('btn-skill').style.opacity = '0.5';
-            setTimeout(() => { player.skillReady = true; document.getElementById('btn-skill').style.opacity = '1'; }, player.skillCooldown * 1000);
-            player.inBush = false;
-        });
-
-        function buyItem() {
-            if(gold >= 50) { gold -= 50; player.damage += 10; updateUI(); }
-        }
-
-        function healPlayer(amount) {
-            player.hp = Math.min(player.maxHp, player.hp + amount);
-        }
-
-        function gainXP(amount) {
-            player.xp += amount;
-            if(player.xp >= player.maxXp) {
-                player.level++; player.xp -= player.maxXp; player.maxXp *= 1.5;
-                player.maxHp += 50; player.hp = player.maxHp; player.damage += 5;
-                addFloatingText(player.x, player.y - 20, "SEVİYE ATLADIN!", '#f1c40f');
-                createParticles(player.x, player.y, '#f1c40f', 20);
+            for (let y = 0; y <= canvas.height; y += grid) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
-            document.getElementById('xp-bar').style.width = (player.xp / player.maxXp * 100) + '%';
-            document.getElementById('lvl').innerText = player.level;
-        }
-
-        function spawnWave() {
-            let angle = Math.random() * Math.PI * 2;
-            let dist = Math.max(canvas.width, canvas.height);
-            let isBoss = frame > 0 && frame % 1200 === 0;
-            
-            let count = isBoss ? 1 : 3 + Math.floor(frame/600);
-            for(let i=0; i<count; i++) {
-                entities.push({
-                    x: nexus.x + Math.cos(angle) * dist + (Math.random()*60-30),
-                    y: nexus.y + Math.sin(angle) * dist + (Math.random()*60-30),
-                    radius: isBoss ? 30 : 12, maxHp: isBoss ? 800 : 50 + (frame/50), hp: isBoss ? 800 : 50 + (frame/50),
-                    speed: isBoss ? 0.7 : 1.5, isBoss: isBoss, damage: isBoss ? 25 : 5, state: 'move'
-                });
-            }
-            if(isBoss) addFloatingText(nexus.x, nexus.y - 80, "BOSS YAKLAŞIYOR!", '#9b59b6');
-        }
-
-        function addFloatingText(x, y, text, color) {
-            floatingTexts.push({ x: x, y: y, text: text, color: color, life: 30, vy: -1 });
-        }
-        function createParticles(x, y, color, count) {
-            for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20, color: color });
-        }
-        function updateUI() {
-            document.getElementById('tower-hp').innerText = Math.floor(nexus.hp);
-            document.getElementById('gold').innerText = gold;
         }
 
         // --- OYUN DÖNGÜSÜ ---
-        function update() {
-            if(nexus.hp <= 0) return;
+        function loop() {
+            if (isGameOver) return;
+            gameLoopId = requestAnimationFrame(loop);
 
-            // Çalı Kontrolü
-            player.inBush = bushes.some(b => Math.hypot(player.x - b.x, player.y - b.y) < b.radius);
+            // Hız kontrolü
+            if (++frameCount < currentSpeed) return;
+            
+            frameCount = 0;
+            changingDirection = false; // Yılan hareket etti, kilit açıldı
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid(); // Retro ızgarayı çiz
 
-            // Oyuncu Hareketi ve Dirilme
-            if(player.isDead) {
-                player.respawnTimer--;
-                if(player.respawnTimer <= 0) {
-                    player.isDead = false; player.hp = player.maxHp; player.x = nexus.x; player.y = nexus.y;
-                    document.getElementById('respawn-text').style.display = 'none';
-                }
-            } else {
-                player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + joyX * player.speed));
-                player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + joyY * player.speed));
-                if(frame % 60 === 0 && player.hp < player.maxHp) healPlayer(2); // Pasif yenilenme
+            snake.x += snake.dx;
+            snake.y += snake.dy;
+
+            // Duvara çarpma (Klasik kural: Kenara çarparsan ölürsün)
+            if (snake.x < 0 || snake.x >= canvas.width || snake.y < 0 || snake.y >= canvas.height) {
+                gameOver(); return;
             }
 
-            // Minyon Yapay Zekası
-            for (let i = entities.length - 1; i >= 0; i--) {
-                let e = entities[i];
-                let distToNexus = Math.hypot(nexus.x - e.x, nexus.y - e.y);
-                let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
-                
-                // Aggro sistemi
-                let target = nexus;
-                if(!player.isDead && !player.inBush && distToPlayer < 150) target = player;
+            snake.cells.unshift({ x: snake.x, y: snake.y });
+            if (snake.cells.length > snake.maxCells) snake.cells.pop();
 
-                let dx = target.x - e.x, dy = target.y - e.y;
-                let dist = Math.hypot(dx, dy);
+            // Elmayı çiz (Retro kırmızı kare)
+            ctx.fillStyle = '#ff003c';
+            ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
 
-                if (dist > target.radius + e.radius) {
-                    e.x += (dx / dist) * e.speed; e.y += (dy / dist) * e.speed;
-                } else if(frame % 30 === 0) {
-                    target.hp -= e.damage;
-                    createParticles(target.x, target.y, '#c0392b', 2);
-                    if(target === player && player.hp <= 0 && !player.isDead) {
-                        player.isDead = true; player.respawnTimer = 180;
-                        document.getElementById('respawn-text').style.display = 'block';
+            // Yılanı çiz (Parlak yeşil)
+            ctx.fillStyle = '#39ff14';
+            snake.cells.forEach(function(cell, index) {
+                // Kafayı biraz daha koyu veya farklı yaparak belli edebiliriz ama klasik düz renktir
+                ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+                // Yılan elma yedi mi?
+                if (cell.x === apple.x && cell.y === apple.y) {
+                    snake.maxCells++;
+                    score += 10;
+                    scoreElement.innerText = score;
+                    playSound('eat');
+                    placeApple();
+                    
+                    // Zorluk eğrisi (Hızlanma): Her 50 puanda bir hızlanır, limit 3'e kadar düşer
+                    if (score % 50 === 0 && currentSpeed > 3) {
+                        currentSpeed--;
                     }
                 }
 
-                if(e.hp <= 0) {
-                    gold += e.isBoss ? 100 : 15; gainXP(e.isBoss ? 50 : 20);
-                    addFloatingText(e.x, e.y, "+" + (e.isBoss ? 100 : 15) + "G", '#f1c40f');
-                    entities.splice(i, 1); updateUI();
+                // Yılan kendini ısırdı mı?
+                for (let i = index + 1; i < snake.cells.length; i++) {
+                    if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) gameOver();
                 }
-            }
-            updateUI();
-
-            // Mermiler ve Yetenekler
-            for (let i = projectiles.length - 1; i >= 0; i--) {
-                let p = projectiles[i];
-                if(p.type === 'basic') {
-                    if(!entities.includes(p.target)) { projectiles.splice(i, 1); continue; }
-                    let dist = Math.hypot(p.target.x - p.x, p.target.y - p.y);
-                    if(dist < p.target.radius + 5) {
-                        p.target.hp -= p.damage;
-                        addFloatingText(p.target.x, p.target.y, p.damage, '#fff');
-                        if(player.lifesteal) healPlayer(p.damage * player.lifesteal);
-                        createParticles(p.target.x, p.target.y, '#f1c40f', 3);
-                        projectiles.splice(i, 1);
-                    } else {
-                        p.x += ((p.target.x - p.x)/dist) * p.speed; p.y += ((p.target.y - p.y)/dist) * p.speed;
-                    }
-                } else { // Yetenek Atışları
-                    p.x += p.vx; p.y += p.vy; p.life--;
-                    let hit = false;
-                    entities.forEach(e => {
-                        if(Math.hypot(e.x - p.x, e.y - p.y) < e.radius + 15) {
-                            if(p.type === 'rocket' && !hit) {
-                                // Patlama Alanı
-                                hit = true; createParticles(p.x, p.y, '#e74c3c', 20);
-                                entities.forEach(e2 => {
-                                    if(Math.hypot(e2.x - p.x, e2.y - p.y) < 80) { e2.hp -= p.damage; addFloatingText(e2.x, e2.y, p.damage, '#e74c3c'); }
-                                });
-                                projectiles.splice(i, 1);
-                            } else if(p.type === 'pierce') {
-                                // Delip Geçme (Aynı mermi bir karaktere birden fazla vurmasın diye array eklenebilir ama basit tuttuk)
-                                e.hp -= p.damage/10; // Her frame az az vurur geçerken
-                                createParticles(e.x, e.y, '#1abc9c', 1);
-                                if(player.lifesteal) healPlayer((p.damage/10) * player.lifesteal);
-                            }
-                        }
-                    });
-                    if(p.life <= 0 && p.type === 'pierce') projectiles.splice(i, 1);
-                }
-            }
-
-            // Efekt Güncellemeleri
-            particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life--; if(p.life<=0) particles.splice(i,1); });
-            floatingTexts.forEach((t, i) => { t.y += t.vy; t.life--; if(t.life<=0) floatingTexts.splice(i,1); });
-
-            frame++;
-            if(frame % 240 === 0) spawnWave();
+            });
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function gameOver() {
+            isGameOver = true;
+            playSound('crash');
+            cancelAnimationFrame(gameLoopId);
+            
+            let messageHTML = `Skor: <span style="color:#fff;">${score}</span>`;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('retroSnakeHighScore', highScore);
+                highScoreElement.innerText = highScore;
+                messageHTML += `<br><br><span style="color:#f1c40f; font-weight:bold;">🏆 YENİ REKOR! 🏆</span>`;
+            }
 
-            // Çalılar
-            bushes.forEach(b => {
-                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
-                ctx.fillStyle = 'rgba(39, 174, 96, 0.3)'; ctx.fill();
-            });
+            finalScoreElement.innerHTML = messageHTML;
+            document.getElementById('game-over').style.display = 'block';
+        }
 
-            // Üs (Nexus)
-            ctx.beginPath(); ctx.arc(nexus.x, nexus.y, nexus.radius, 0, Math.PI*2);
-            ctx.fillStyle = '#2980b9'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#3498db'; ctx.stroke();
-            ctx.fillStyle = '#000'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60, 8);
-            ctx.fillStyle = '#2ecc71'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60 * (nexus.hp
+        window.resetGame = function() {
+            initAudio();
+            snake.x = 160; snake.y = 160;
+            snake.cells = []; snake.maxCells = 4;
+            snake.dx = grid; snake.dy = 0;
+            score = 0; currentSpeed = baseSpeed;
+            scoreElement.innerText = score;
+            isGameOver = false; changingDirection = false;
+            document.getElementById('game-over').style.display = 'none';
+            placeApple();
+            requestAnimationFrame(loop);
+        }
+
+        // Başlangıç
+        placeApple();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
