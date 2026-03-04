@@ -3,329 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Arena Survivor Pro</title>
+    <title>Mini Vadi: Efsaneler</title>
     <style>
-        :root {
-            --bg-color: #1a1a2e;
-            --primary: #e94560;
-            --secondary: #43dde6;
-            --text: #ffffff;
-        }
         body {
-            margin: 0;
-            overflow: hidden;
-            background-color: var(--bg-color);
-            color: var(--text);
+            margin: 0; overflow: hidden; background-color: #1e3623; color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: none;
-            user-select: none;
+            touch-action: none; user-select: none;
         }
         canvas { display: block; }
-
-        /* Menü Tasarımları */
-        .overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(26, 26, 46, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
         .hidden { display: none !important; }
 
-        h1 { font-size: 3rem; margin-bottom: 20px; color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
-        h2 { color: var(--primary); }
-
-        .menu-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            width: 80%;
-            max-width: 400px;
+        /* Arayüz */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+        }
+        .top-bar {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            text-align: center; font-weight: bold; text-shadow: 1px 1px 3px #000;
+        }
+        #btn-shop {
+            position: absolute; top: 15px; right: 20px; background: #f1c40f; color: #000;
+            padding: 8px 12px; font-weight: bold; border-radius: 5px; border: 2px solid #d4ac0d;
+            pointer-events: auto; cursor: pointer;
+        }
+        
+        /* XP Bar */
+        #xp-bar-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 10px; background: #222;
+        }
+        #xp-bar { height: 100%; width: 0%; background: #9b59b6; transition: width 0.3s; }
+        #level-text {
+            position: absolute; bottom: 12px; left: 5px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000;
         }
 
-        button {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.3s;
+        /* Menüler */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 10, 0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 50; pointer-events: auto;
         }
-        .btn-start { background: var(--primary); color: white; }
-        .btn-settings { background: #4e4e6a; color: white; }
-        .btn-back { background: transparent; border: 2px solid var(--secondary); color: var(--secondary); }
-        button:active { transform: scale(0.95); }
-
-        /* Ayarlar */
-        .setting-item { margin: 20px 0; text-align: left; }
-        label { display: block; margin-bottom: 10px; font-weight: bold; }
-        input[type="range"] { width: 100%; accent-color: var(--secondary); }
-
-        /* Zorluk Seçimi */
-        .difficulty-container { display: flex; gap: 10px; margin-bottom: 20px; }
-        .diff-btn {
-            flex: 1; padding: 10px; font-size: 0.9rem; background: #30304a; color: #888;
+        .champ-card {
+            background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 10px;
+            padding: 15px; margin: 10px; width: 80%; max-width: 300px; text-align: center;
         }
-        .diff-btn.active { background: var(--secondary); color: #000; }
-
-        /* Oyun İçi UI */
-        #score-ui {
-            position: absolute; top: 20px; left: 20px; font-size: 1.5rem;
-            font-weight: bold; pointer-events: none; z-index: 5;
+        .champ-card h3 { margin: 0 0 10px 0; color: #f1c40f; }
+        .champ-card p { font-size: 13px; color: #ccc; margin-bottom: 10px; }
+        .btn-select {
+            background: #27ae60; color: #fff; border: none; padding: 10px 20px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%;
         }
 
-        /* Joystick */
+        /* Kontroller */
         #joystick-zone {
-            display: none; position: absolute; width: 120px; height: 120px;
+            position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
             background: rgba(255, 255, 255, 0.1); border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.2); z-index: 10; pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.2); pointer-events: auto;
         }
         #stick {
             position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
-            background: var(--secondary); opacity: 0.6; border-radius: 50%;
+            background: rgba(100, 200, 255, 0.6); border-radius: 50%; pointer-events: none;
+        }
+        #action-zone {
+            position: absolute; bottom: 30px; right: 30px; width: 150px; height: 150px; pointer-events: auto;
+        }
+        .btn-action {
+            position: absolute; background: rgba(0, 0, 0, 0.6); border: 2px solid #fff;
+            color: #fff; border-radius: 50%; font-weight: bold; display: flex;
+            align-items: center; justify-content: center;
+        }
+        #btn-attack { bottom: 0; left: 0; width: 75px; height: 75px; border-color: #e67e22; }
+        #btn-skill { top: 0; right: 0; width: 60px; height: 60px; border-color: #00ffff; font-size: 12px;}
+        #respawn-text {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 30px; color: #e74c3c; font-weight: bold; display: none; text-shadow: 2px 2px 5px #000;
         }
     </style>
 </head>
 <body>
 
-    <div id="score-ui" class="hidden">Skor: <span id="current-score">0</span></div>
-
-    <div id="main-menu" class="overlay">
-        <h1>ARENA</h1>
-        <div class="menu-card">
-            <label>Zorluk Seçin</label>
-            <div class="difficulty-container">
-                <button class="diff-btn" onclick="setDifficulty('easy', this)">Kolay</button>
-                <button class="diff-btn active" onclick="setDifficulty('medium', this)">Orta</button>
-                <button class="diff-btn" onclick="setDifficulty('hard', this)">Zor</button>
-            </div>
-            <button class="btn-start" onclick="startGame()">OYUNU BAŞLAT</button>
-            <button class="btn-settings" onclick="showScreen('settings-menu')">AYARLAR</button>
+    <div id="champ-select" class="overlay">
+        <h2 style="color:#00ffff;">ŞAMPİYONUNU SEÇ</h2>
+        
+        <div class="champ-card">
+            <h3>Manyak Nişancı</h3>
+            <p>Uzun menzil. Yetenek: Alan Hasarlı Roket.</p>
+            <button class="btn-select" onclick="startGame('adc')">SEÇ</button>
+        </div>
+        <div class="champ-card">
+            <h3>Patron</h3>
+            <p>Yüksek can. Yetenek: Konik Alan Yumruğu.</p>
+            <button class="btn-select" onclick="startGame('bruiser')">SEÇ</button>
+        </div>
+        <div class="champ-card">
+            <h3>Mahvolmuş</h3>
+            <p>Can çalma pasifi. Yetenek: Delip geçen kılıç dalgası.</p>
+            <button class="btn-select" onclick="startGame('king')">SEÇ</button>
         </div>
     </div>
 
-    <div id="settings-menu" class="overlay hidden">
-        <h2>AYARLAR</h2>
-        <div class="menu-card">
-            <div class="setting-item">
-                <label>Konsol Hassasiyeti: <span id="sens-val">50</span></label>
-                <input type="range" id="sens-input" min="1" max="100" value="50" oninput="updateSens(this.value)">
-            </div>
-            <button class="btn-back" onclick="showScreen('main-menu')">GERİ DÖN</button>
+    <div id="ui-layer" class="hidden">
+        <div class="top-bar">
+            Kule: <span id="tower-hp" style="color:#2ecc71;">1500</span> | 
+            Altın: <span id="gold" style="color:#f1c40f;">0</span>
+        </div>
+        <div id="btn-shop" onclick="buyItem()">⚔️ +10 Hasar (50G)</div>
+        
+        <div id="level-text">Seviye: <span id="lvl">1</span></div>
+        <div id="xp-bar-container"><div id="xp-bar"></div></div>
+        <div id="respawn-text">YENİDEN DOĞUYORSUN...</div>
+
+        <div id="joystick-zone"><div id="stick"></div></div>
+        <div id="action-zone">
+            <div id="btn-attack" class="btn-action">VUR</div>
+            <div id="btn-skill" class="btn-action">YETENEK</div>
         </div>
     </div>
-
-    <div id="game-over" class="overlay hidden">
-        <h2>ELENDİN!</h2>
-        <div class="menu-card">
-            <p style="font-size: 1.2rem;">Skorun: <span id="final-score" style="color: var(--secondary); font-weight: bold;">0</span></p>
-            <button class="btn-start" onclick="startGame()">TEKRAR DENE</button>
-            <button class="btn-back" onclick="showScreen('main-menu')">ANA MENÜ</button>
-        </div>
-    </div>
-
-    <div id="joystick-zone"><div id="stick"></div></div>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Elementler
-        const screens = ['main-menu', 'settings-menu', 'game-over'];
-        const scoreUI = document.getElementById('score-ui');
-        const currentScoreText = document.getElementById('current-score');
-        const finalScoreText = document.getElementById('final-score');
-        const joystickZone = document.getElementById('joystick-zone');
-        const stick = document.getElementById('stick');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
 
-        // Ayarlar ve Değişkenler
-        let gameState = 'MENU';
-        let sensitivity = 0.5; // 50 / 100
-        let difficulty = 'medium';
-        let joyX = 0, joyY = 0;
-        let isTouching = false;
-        let joyOriginX = 0, joyOriginY = 0;
-        const maxStickDist = 35;
+        let gameState = 'SELECT';
+        let frame = 0;
+        let gold = 0;
 
-        // Oyun Objeleri
-        let player = { x: 0, y: 0, radius: 15, baseSpeed: 5 };
-        let enemies = [];
-        let score = 0;
-        let frameCount = 0;
-        let spawnRate = 100;
-        let enemyBaseSpeed = 1;
+        // --- ŞAMPİYON VERİTABANI ---
+        const champs = {
+            'adc': { color: '#3498db', maxHp: 300, attackRange: 180, damage: 30, speed: 4.5, skillCooldown: 5, style: 'ranged', radius: 14 },
+            'bruiser': { color: '#e74c3c', maxHp: 700, attackRange: 70, damage: 45, speed: 4.0, skillCooldown: 6, style: 'cone', radius: 18 },
+            'king': { color: '#1abc9c', maxHp: 450, attackRange: 80, damage: 35, speed: 4.8, skillCooldown: 4, style: 'pierce', radius: 15, lifesteal: 0.2 }
+        };
 
-        // --- EKRAN YÖNETİMİ ---
-        function showScreen(screenId) {
-            screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-            if(screenId) document.getElementById(screenId).classList.remove('hidden');
-            scoreUI.classList.add('hidden');
-            gameState = 'MENU';
-        }
+        let player = { x: 0, y: 0, hp: 0, maxHp: 0, level: 1, xp: 0, maxXp: 100, isDead: false, respawnTimer: 0, inBush: false, facingAngle: 0, skillReady: true };
+        let nexus = { x: 0, y: 0, hp: 1500, maxHp: 1500, radius: 45 };
+        let bushes = [];
+        let entities = [];
+        let projectiles = [];
+        let particles = [];
+        let floatingTexts = [];
 
-        function updateSens(val) {
-            document.getElementById('sens-val').innerText = val;
-            sensitivity = val / 100;
-        }
-
-        function setDifficulty(lvl, btn) {
-            difficulty = lvl;
-            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        // --- OYUN BAŞLATMA ---
-        function startGame() {
-            showScreen(null); // Tüm menüleri gizle
-            scoreUI.classList.remove('hidden');
-            gameState = 'PLAYING';
+        function startGame(champId) {
+            document.getElementById('champ-select').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
             
-            // Başlangıç değerlerini sıfırla
-            score = 0;
-            currentScoreText.innerText = "0";
-            frameCount = 0;
-            enemies = [];
-            player.x = canvas.width / 2;
-            player.y = canvas.height / 2;
+            nexus.x = canvas.width / 2;
+            nexus.y = canvas.height / 2;
+            
+            let base = champs[champId];
+            Object.assign(player, base); // Şampiyon özelliklerini aktar
+            player.x = nexus.x; player.y = nexus.y + 100;
+            player.hp = player.maxHp;
+            player.champId = champId;
+            
+            // Çalıları oluştur
+            bushes = [
+                { x: canvas.width/4, y: canvas.height/4, radius: 60 },
+                { x: canvas.width*0.75, y: canvas.height*0.75, radius: 80 }
+            ];
 
-            // Zorluk ayarlarını uygula
-            if(difficulty === 'easy') { spawnRate = 140; enemyBaseSpeed = 0.6; }
-            else if(difficulty === 'medium') { spawnRate = 90; enemyBaseSpeed = 1.1; }
-            else { spawnRate = 50; enemyBaseSpeed = 1.8; }
-
-            requestAnimationFrame(gameLoop);
+            gameState = 'PLAYING';
+            loop();
         }
 
         // --- KONTROLLER ---
-        canvas.addEventListener('touchstart', e => {
-            if(gameState !== 'PLAYING') return;
-            const t = e.touches[0];
-            isTouching = true;
-            joyOriginX = t.clientX;
-            joyOriginY = t.clientY;
-            joystickZone.style.display = 'block';
-            joystickZone.style.left = (joyOriginX - 60) + 'px';
-            joystickZone.style.top = (joyOriginY - 60) + 'px';
+        const stick = document.getElementById('stick');
+        let joyX = 0, joyY = 0, isMoving = false, joyOriginX = 0, joyOriginY = 0;
+        
+        document.getElementById('joystick-zone').addEventListener('touchstart', e => {
+            if(player.isDead) return;
+            let rect = e.target.getBoundingClientRect();
+            joyOriginX = rect.left + 60; joyOriginY = rect.top + 60;
+            isMoving = true; handleMove(e.touches[0]);
+        });
+        document.getElementById('joystick-zone').addEventListener('touchmove', e => {
+            e.preventDefault(); if(isMoving) handleMove(e.touches[0]);
+        });
+        document.getElementById('joystick-zone').addEventListener('touchend', () => {
+            isMoving = false; joyX = 0; joyY = 0; stick.style.transform = `translate(0px, 0px)`;
         });
 
-        canvas.addEventListener('touchmove', e => {
-            if(!isTouching || gameState !== 'PLAYING') return;
-            const t = e.touches[0];
-            const dx = t.clientX - joyOriginX;
-            const dy = t.clientY - joyOriginY;
-            const dist = Math.min(Math.sqrt(dx*dx + dy*dy), maxStickDist);
-            const angle = Math.atan2(dy, dx);
+        function handleMove(t) {
+            let dx = t.clientX - joyOriginX, dy = t.clientY - joyOriginY;
+            let dist = Math.min(Math.sqrt(dx*dx + dy*dy), 35);
+            let angle = Math.atan2(dy, dx);
+            stick.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+            joyX = Math.cos(angle)*dist/35; joyY = Math.sin(angle)*dist/35;
+            if(Math.abs(joyX)>0.1 || Math.abs(joyY)>0.1) player.facingAngle = angle;
+        }
+
+        // --- SAVAŞ SİSTEMİ ---
+        document.getElementById('btn-attack').addEventListener('touchstart', e => {
+            e.preventDefault(); if(player.isDead) return;
             
-            const sx = Math.cos(angle) * dist;
-            const sy = Math.sin(angle) * dist;
-            stick.style.transform = `translate(${sx}px, ${sy}px)`;
-            
-            // Hassasiyet burada devreye giriyor
-            joyX = (sx / maxStickDist) * (sensitivity * 2);
-            joyY = (sy / maxStickDist) * (sensitivity * 2);
+            let target = null, minDist = player.attackRange;
+            entities.forEach(e => {
+                let dist = Math.hypot(e.x - player.x, e.y - player.y) - e.radius;
+                if(dist < minDist) { minDist = dist; target = e; }
+            });
+
+            if(target) {
+                if(player.style === 'ranged') {
+                    projectiles.push({ x: player.x, y: player.y, target: target, speed: 12, damage: player.damage, type: 'basic' });
+                } else {
+                    // Yakın dövüş anında hasar vurur
+                    target.hp -= player.damage;
+                    createParticles(target.x, target.y, '#fff', 3);
+                    addFloatingText(target.x, target.y, player.damage, '#fff');
+                    if(player.lifesteal) healPlayer(player.damage * player.lifesteal);
+                }
+                player.facingAngle = Math.atan2(target.y - player.y, target.x - player.x);
+                player.inBush = false; // Vurunca görünmezlik bozulur
+            }
         });
 
-        canvas.addEventListener('touchend', () => {
-            isTouching = false;
-            joyX = 0; joyY = 0;
-            joystickZone.style.display = 'none';
+        document.getElementById('btn-skill').addEventListener('touchstart', e => {
+            e.preventDefault(); if(player.isDead || !player.skillReady) return;
+            
+            let angle = player.facingAngle;
+            if(player.style === 'ranged') {
+                // Roket (Çarpınca Alan Hasarı)
+                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*10, vy: Math.sin(angle)*10, damage: player.damage*2, type: 'rocket', life: 60 });
+            } else if(player.style === 'cone') {
+                // Sett Yumruğu (Koni Hasarı)
+                createParticles(player.x + Math.cos(angle)*40, player.y + Math.sin(angle)*40, '#f39c12', 15);
+                entities.forEach(e => {
+                    let d = Math.hypot(e.x - player.x, e.y - player.y);
+                    let a = Math.atan2(e.y - player.y, e.x - player.x);
+                    let angleDiff = Math.abs(a - angle);
+                    if(angleDiff > Math.PI) angleDiff = 2*Math.PI - angleDiff;
+                    if(d < 120 && angleDiff < 0.8) {
+                        e.hp -= player.damage * 2.5;
+                        addFloatingText(e.x, e.y, player.damage * 2.5, '#e74c3c');
+                    }
+                });
+            } else if(player.style === 'pierce') {
+                // Viego Kılıç (Delip Geçen)
+                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*12, vy: Math.sin(angle)*12, damage: player.damage*1.5, type: 'pierce', life: 40 });
+            }
+
+            player.skillReady = false;
+            document.getElementById('btn-skill').style.opacity = '0.5';
+            setTimeout(() => { player.skillReady = true; document.getElementById('btn-skill').style.opacity = '1'; }, player.skillCooldown * 1000);
+            player.inBush = false;
         });
+
+        function buyItem() {
+            if(gold >= 50) { gold -= 50; player.damage += 10; updateUI(); }
+        }
+
+        function healPlayer(amount) {
+            player.hp = Math.min(player.maxHp, player.hp + amount);
+        }
+
+        function gainXP(amount) {
+            player.xp += amount;
+            if(player.xp >= player.maxXp) {
+                player.level++; player.xp -= player.maxXp; player.maxXp *= 1.5;
+                player.maxHp += 50; player.hp = player.maxHp; player.damage += 5;
+                addFloatingText(player.x, player.y - 20, "SEVİYE ATLADIN!", '#f1c40f');
+                createParticles(player.x, player.y, '#f1c40f', 20);
+            }
+            document.getElementById('xp-bar').style.width = (player.xp / player.maxXp * 100) + '%';
+            document.getElementById('lvl').innerText = player.level;
+        }
+
+        function spawnWave() {
+            let angle = Math.random() * Math.PI * 2;
+            let dist = Math.max(canvas.width, canvas.height);
+            let isBoss = frame > 0 && frame % 1200 === 0;
+            
+            let count = isBoss ? 1 : 3 + Math.floor(frame/600);
+            for(let i=0; i<count; i++) {
+                entities.push({
+                    x: nexus.x + Math.cos(angle) * dist + (Math.random()*60-30),
+                    y: nexus.y + Math.sin(angle) * dist + (Math.random()*60-30),
+                    radius: isBoss ? 30 : 12, maxHp: isBoss ? 800 : 50 + (frame/50), hp: isBoss ? 800 : 50 + (frame/50),
+                    speed: isBoss ? 0.7 : 1.5, isBoss: isBoss, damage: isBoss ? 25 : 5, state: 'move'
+                });
+            }
+            if(isBoss) addFloatingText(nexus.x, nexus.y - 80, "BOSS YAKLAŞIYOR!", '#9b59b6');
+        }
+
+        function addFloatingText(x, y, text, color) {
+            floatingTexts.push({ x: x, y: y, text: text, color: color, life: 30, vy: -1 });
+        }
+        function createParticles(x, y, color, count) {
+            for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 20, color: color });
+        }
+        function updateUI() {
+            document.getElementById('tower-hp').innerText = Math.floor(nexus.hp);
+            document.getElementById('gold').innerText = gold;
+        }
 
         // --- OYUN DÖNGÜSÜ ---
-        function spawnEnemy() {
-            let x, y;
-            if (Math.random() < 0.5) {
-                x = Math.random() < 0.5 ? -20 : canvas.width + 20;
-                y = Math.random() * canvas.height;
+        function update() {
+            if(nexus.hp <= 0) return;
+
+            // Çalı Kontrolü
+            player.inBush = bushes.some(b => Math.hypot(player.x - b.x, player.y - b.y) < b.radius);
+
+            // Oyuncu Hareketi ve Dirilme
+            if(player.isDead) {
+                player.respawnTimer--;
+                if(player.respawnTimer <= 0) {
+                    player.isDead = false; player.hp = player.maxHp; player.x = nexus.x; player.y = nexus.y;
+                    document.getElementById('respawn-text').style.display = 'none';
+                }
             } else {
-                x = Math.random() * canvas.width;
-                y = Math.random() < 0.5 ? -20 : canvas.height + 20;
+                player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + joyX * player.speed));
+                player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + joyY * player.speed));
+                if(frame % 60 === 0 && player.hp < player.maxHp) healPlayer(2); // Pasif yenilenme
             }
-            enemies.push({ x, y, radius: 8, speed: enemyBaseSpeed + Math.random() * 0.5 });
+
+            // Minyon Yapay Zekası
+            for (let i = entities.length - 1; i >= 0; i--) {
+                let e = entities[i];
+                let distToNexus = Math.hypot(nexus.x - e.x, nexus.y - e.y);
+                let distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
+                
+                // Aggro sistemi
+                let target = nexus;
+                if(!player.isDead && !player.inBush && distToPlayer < 150) target = player;
+
+                let dx = target.x - e.x, dy = target.y - e.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > target.radius + e.radius) {
+                    e.x += (dx / dist) * e.speed; e.y += (dy / dist) * e.speed;
+                } else if(frame % 30 === 0) {
+                    target.hp -= e.damage;
+                    createParticles(target.x, target.y, '#c0392b', 2);
+                    if(target === player && player.hp <= 0 && !player.isDead) {
+                        player.isDead = true; player.respawnTimer = 180;
+                        document.getElementById('respawn-text').style.display = 'block';
+                    }
+                }
+
+                if(e.hp <= 0) {
+                    gold += e.isBoss ? 100 : 15; gainXP(e.isBoss ? 50 : 20);
+                    addFloatingText(e.x, e.y, "+" + (e.isBoss ? 100 : 15) + "G", '#f1c40f');
+                    entities.splice(i, 1); updateUI();
+                }
+            }
+            updateUI();
+
+            // Mermiler ve Yetenekler
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                if(p.type === 'basic') {
+                    if(!entities.includes(p.target)) { projectiles.splice(i, 1); continue; }
+                    let dist = Math.hypot(p.target.x - p.x, p.target.y - p.y);
+                    if(dist < p.target.radius + 5) {
+                        p.target.hp -= p.damage;
+                        addFloatingText(p.target.x, p.target.y, p.damage, '#fff');
+                        if(player.lifesteal) healPlayer(p.damage * player.lifesteal);
+                        createParticles(p.target.x, p.target.y, '#f1c40f', 3);
+                        projectiles.splice(i, 1);
+                    } else {
+                        p.x += ((p.target.x - p.x)/dist) * p.speed; p.y += ((p.target.y - p.y)/dist) * p.speed;
+                    }
+                } else { // Yetenek Atışları
+                    p.x += p.vx; p.y += p.vy; p.life--;
+                    let hit = false;
+                    entities.forEach(e => {
+                        if(Math.hypot(e.x - p.x, e.y - p.y) < e.radius + 15) {
+                            if(p.type === 'rocket' && !hit) {
+                                // Patlama Alanı
+                                hit = true; createParticles(p.x, p.y, '#e74c3c', 20);
+                                entities.forEach(e2 => {
+                                    if(Math.hypot(e2.x - p.x, e2.y - p.y) < 80) { e2.hp -= p.damage; addFloatingText(e2.x, e2.y, p.damage, '#e74c3c'); }
+                                });
+                                projectiles.splice(i, 1);
+                            } else if(p.type === 'pierce') {
+                                // Delip Geçme (Aynı mermi bir karaktere birden fazla vurmasın diye array eklenebilir ama basit tuttuk)
+                                e.hp -= p.damage/10; // Her frame az az vurur geçerken
+                                createParticles(e.x, e.y, '#1abc9c', 1);
+                                if(player.lifesteal) healPlayer((p.damage/10) * player.lifesteal);
+                            }
+                        }
+                    });
+                    if(p.life <= 0 && p.type === 'pierce') projectiles.splice(i, 1);
+                }
+            }
+
+            // Efekt Güncellemeleri
+            particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life--; if(p.life<=0) particles.splice(i,1); });
+            floatingTexts.forEach((t, i) => { t.y += t.vy; t.life--; if(t.life<=0) floatingTexts.splice(i,1); });
+
+            frame++;
+            if(frame % 240 === 0) spawnWave();
         }
 
-        function gameLoop() {
-            if(gameState !== 'PLAYING') return;
-
+        function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Oyuncu hareketi
-            player.x += joyX * player.baseSpeed;
-            player.y += joyY * player.baseSpeed;
+            // Çalılar
+            bushes.forEach(b => {
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(39, 174, 96, 0.3)'; ctx.fill();
+            });
 
-            // Sınır kontrolü
-            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-
-            // Oyuncuyu çiz
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-            ctx.fillStyle = '#43dde6';
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Düşmanları güncelle ve çiz
-            for(let i = enemies.length - 1; i >= 0; i--) {
-                let e = enemies[i];
-                let dx = player.x - e.x;
-                let dy = player.y - e.y;
-                let d = Math.sqrt(dx*dx + dy*dy);
-
-                e.x += (dx/d) * e.speed;
-                e.y += (dy/d) * e.speed;
-
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2);
-                ctx.fillStyle = '#ff2e63';
-                ctx.fill();
-
-                // Çarpışma
-                if(d < player.radius + e.radius - 2) {
-                    endGame();
-                }
-            }
-
-            frameCount++;
-            if(frameCount % 60 === 0) {
-                score++;
-                currentScoreText.innerText = score;
-                if(score % 5 === 0) {
-                    enemyBaseSpeed += 0.1;
-                    if(spawnRate > 20) spawnRate -= 2;
-                }
-            }
-            if(frameCount % spawnRate === 0) spawnEnemy();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function endGame() {
-            gameState = 'GAMEOVER';
-            joystickZone.style.display = 'none';
-            finalScoreText.innerText = score;
-            document.getElementById('game-over').classList.remove('hidden');
-        }
-
-        // Ekran boyutlandırma
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-    </script>
-</body>
-</html>
+            // Üs (Nexus)
+            ctx.beginPath(); ctx.arc(nexus.x, nexus.y, nexus.radius, 0, Math.PI*2);
+            ctx.fillStyle = '#2980b9'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#3498db'; ctx.stroke();
+            ctx.fillStyle = '#000'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60, 8);
+            ctx.fillStyle = '#2ecc71'; ctx.fillRect(nexus.x - 30, nexus.y - 60, 60 * (nexus.hp
