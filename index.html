@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yılan: Sürüm 7.0</title>
+    <title>Yılan: Sürüm 8.0</title>
     <style>
-        /* KURŞUN GEÇİRMEZ CSS */
+        /* KURŞUN GEÇİRMEZ CSS TASARIMI */
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: #121212; color: #fff;
             font-family: Arial, sans-serif; overflow: hidden;
-            user-select: none; -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none; touch-action: manipulation;
         }
 
         .ekran {
@@ -24,6 +24,7 @@
             padding: 15px 20px; font-size: 18px; font-weight: bold; margin: 8px 0; 
             width: 90%; max-width: 320px; text-align: center; cursor: pointer;
             box-shadow: 0 4px 0 #209907; text-transform: uppercase; font-family: inherit;
+            display: block; /* Div butonları için */
         }
         .btn:active { transform: translateY(4px); box-shadow: none; }
         .btn-mavi { background-color: #3498db; color: #fff; box-shadow: 0 4px 0 #1c6ea4; }
@@ -31,10 +32,10 @@
         .btn-koyu { background-color: #2c3e50; color: #fff; box-shadow: 0 4px 0 #151e27; }
 
         .kutu-secim { display: flex; gap: 15px; margin: 15px 0; background: #222; padding: 10px; border-radius: 10px; }
-        .renk-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
-        .renk-btn.secili { border-color: #fff; transform: scale(1.1); }
-        .meyve-btn { font-size: 24px; padding: 5px 10px; cursor: pointer; opacity: 0.4; }
-        .meyve-btn.secili { opacity: 1; border-bottom: 2px solid #39ff14; }
+        .renk-kutu { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+        .renk-kutu.secili { border-color: #fff; transform: scale(1.1); }
+        .meyve-secim { font-size: 24px; padding: 5px 10px; cursor: pointer; opacity: 0.4; }
+        .meyve-secim.secili { opacity: 1; border-bottom: 2px solid #39ff14; }
 
         canvas { background-color: #050a05; border: 3px solid #333; border-radius: 5px; touch-action: none; max-width: 95vw; display: block; margin: 0 auto; }
         .ust-bilgi { display: flex; justify-content: space-between; width: 100%; max-width: 288px; margin-bottom: 10px; font-weight: bold; font-size: 16px;}
@@ -51,40 +52,36 @@
         #btn-saga { grid-column: 3; grid-row: 2; }
         #btn-asagi { grid-column: 2; grid-row: 3; }
 
-        /* Sürüm Kontrol Çubuğu */
-        #versiyon-uyarisi {
+        /* Sistem Durum Çubuğu */
+        #sistem-uyarisi {
             position: absolute; top: 0; left: 0; width: 100%; background: #e74c3c; color: #fff;
             text-align: center; padding: 5px; font-weight: bold; z-index: 999; font-size: 12px;
+        }
+        #hata-ekrani {
+            display: none; position: absolute; top: 30px; left: 0; width: 100%; background: red; 
+            color: white; padding: 10px; z-index: 9000; font-size: 12px;
         }
     </style>
 </head>
 <body>
 
-    <div id="versiyon-uyarisi">SÜRÜM 7.0 YÜKLENDİ - EĞER BUNU GÖRÜYORSAN SORUN YOKTUR</div>
-
-    <div id="hata-ekrani" style="display:none; position:absolute; top:30px; left:0; width:100%; background:red; color:white; padding:10px; z-index:9000; font-size:12px;"></div>
-
-    <script>
-        window.onerror = function(msg, url, line) {
-            document.getElementById('hata-ekrani').style.display = 'block';
-            document.getElementById('hata-ekrani').innerHTML += "Hata: " + msg + " (Satır: " + line + ")<br>";
-        };
-    </script>
+    <div id="sistem-uyarisi">KOD YÜKLENİYOR... LÜTFEN BEKLEYİN</div>
+    <div id="hata-ekrani"></div>
 
     <div id="ekran-menu" class="ekran" style="display: flex;">
         <h1 style="color: #39ff14; font-size: 50px; margin: 20px 0 10px 0; font-family: monospace;">SNAKE</h1>
         <p style="color: #aaa; margin: 0;">Yılan Rengini Seç</p>
         
         <div class="kutu-secim">
-            <div class="renk-btn secili" style="background: #39ff14;" onclick="window.renkSec(this, '#39ff14')"></div>
-            <div class="renk-btn" style="background: #3498db;" onclick="window.renkSec(this, '#3498db')"></div>
-            <div class="renk-btn" style="background: #f1c40f;" onclick="window.renkSec(this, '#f1c40f')"></div>
-            <div class="renk-btn" style="background: #e74c3c;" onclick="window.renkSec(this, '#e74c3c')"></div>
+            <div class="renk-kutu secili" style="background: #39ff14;" data-renk="#39ff14"></div>
+            <div class="renk-kutu" style="background: #3498db;" data-renk="#3498db"></div>
+            <div class="renk-kutu" style="background: #f1c40f;" data-renk="#f1c40f"></div>
+            <div class="renk-kutu" style="background: #e74c3c;" data-renk="#e74c3c"></div>
         </div>
 
-        <button class="btn" onclick="window.oyunuBaslat(false)">▶ OYUNA BAŞLA</button>
-        <button class="btn btn-mavi" onclick="window.ekranGecis('ekran-editor')">🛠️ ÖZEL HARİTA YAP</button>
-        <button class="btn btn-kirmizi" onclick="window.kadoModuBaslat()">👑 KADO MODU 👑</button>
+        <div id="btn-basla-normal" class="btn">▶ OYUNA BAŞLA</div>
+        <div id="btn-harita-yap" class="btn btn-mavi">🛠️ ÖZEL HARİTA YAP</div>
+        <div id="btn-kado-modu" class="btn btn-kirmizi">👑 KADO MODU 👑</div>
     </div>
 
     <div id="ekran-editor" class="ekran">
@@ -93,22 +90,22 @@
         
         <div style="background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: 90%; max-width: 320px;">
             <div class="kutu-secim" style="margin: 0 0 10px 0; padding: 0; background: transparent; justify-content: space-around;">
-                <div class="meyve-btn secili" onclick="window.meyveSec(this, 'normal')">🍎</div>
-                <div class="meyve-btn" onclick="window.meyveSec(this, 'hiz')">⚡</div>
-                <div class="meyve-btn" onclick="window.meyveSec(this, 'yavas')">❄️</div>
-                <div class="meyve-btn" onclick="window.meyveSec(this, 'zehir')">☠️</div>
+                <div class="meyve-secim secili" data-tip="normal">🍎</div>
+                <div class="meyve-secim" data-tip="hiz">⚡</div>
+                <div class="meyve-secim" data-tip="yavas">❄️</div>
+                <div class="meyve-secim" data-tip="zehir">☠️</div>
             </div>
             
             <div style="display: flex; justify-content: space-between; gap: 10px;">
-                <button class="btn btn-koyu" style="margin:0; padding:10px; font-size:14px; flex:1;" onclick="window.editorDoldur()">Doldur</button>
-                <button class="btn btn-kirmizi" style="margin:0; padding:10px; font-size:14px; flex:1;" onclick="window.editorTemizle()">Temizle</button>
+                <div id="btn-doldur" class="btn btn-koyu" style="margin:0; padding:10px; font-size:14px; flex:1;">Doldur</div>
+                <div id="btn-temizle" class="btn btn-kirmizi" style="margin:0; padding:10px; font-size:14px; flex:1;">Temizle</div>
             </div>
         </div>
 
         <canvas id="canvasEditor" width="288" height="288"></canvas>
 
-        <button class="btn" style="margin-top: 15px;" onclick="window.oyunuBaslat(true)">▶ HARİTAYI OYNA</button>
-        <button class="btn btn-mavi" onclick="window.ekranGecis('ekran-menu')">ANA MENÜ</button>
+        <div id="btn-oyna-ozel" class="btn" style="margin-top: 15px;">▶ HARİTAYI OYNA</div>
+        <div id="btn-ana-menu-1" class="btn btn-mavi">ANA MENÜ</div>
     </div>
 
     <div id="ekran-oyun" class="ekran">
@@ -121,248 +118,255 @@
         <canvas id="canvasOyun" width="288" height="288"></canvas>
 
         <div class="yon-paneli">
-            <div id="btn-yukari" class="yon-btn" ontouchstart="window.yonVer('yukari', event)" onmousedown="window.yonVer('yukari', event)">▲</div>
-            <div id="btn-sola" class="yon-btn" ontouchstart="window.yonVer('sola', event)" onmousedown="window.yonVer('sola', event)">◀</div>
-            <div id="btn-saga" class="yon-btn" ontouchstart="window.yonVer('saga', event)" onmousedown="window.yonVer('saga', event)">▶</div>
-            <div id="btn-asagi" class="yon-btn" ontouchstart="window.yonVer('asagi', event)" onmousedown="window.yonVer('asagi', event)">▼</div>
+            <div id="btn-yukari" class="yon-btn">▲</div>
+            <div id="btn-sola" class="yon-btn">◀</div>
+            <div id="btn-saga" class="yon-btn">▶</div>
+            <div id="btn-asagi" class="yon-btn">▼</div>
         </div>
     </div>
 
     <div id="ekran-oyun-sonu" class="ekran" style="background: rgba(0,0,0,0.9); z-index: 20;">
         <h1 style="color: #e74c3c; font-size: 40px; margin-bottom: 10px;">OYUN BİTTİ</h1>
         <p style="font-size: 20px; margin-bottom: 30px;">Skorun: <span id="sonSkor" style="color:#fff; font-weight:bold;">0</span></p>
-        <button class="btn" onclick="window.oyunuBaslat(window.gecerliOzelMod)">TEKRAR DENE</button>
-        <button class="btn btn-mavi" onclick="window.ekranGecis('ekran-menu')">ANA MENÜ</button>
+        <div id="btn-tekrar" class="btn">TEKRAR DENE</div>
+        <div id="btn-ana-menu-2" class="btn btn-mavi">ANA MENÜ</div>
     </div>
 
     <script>
-        // TÜM FONKSİYONLAR BİLİNÇLİ OLARAK "WINDOW" OBJESİNE BAĞLANDI (Bulunamama hatasını %100 önler)
-
-        window.hucre = 16;
-        window.boyut = 18; 
-        window.yilanRengi = '#39ff14';
-        window.editorMeyve = 'normal';
-        window.gecerliOzelMod = false;
-
-        window.yilan = { x: 0, y: 0, dx: window.hucre, dy: 0, kuyruk: [], uzunluk: 4 };
-        window.meyveler = [];
-        window.haritaMeyveleri = []; 
-
-        window.skor = 0; window.rekor = 0;
-        window.tabanHiz = 10; window.hiz = 10; window.sayac = 0;
-        window.yonKilit = false; window.buffSuresi = 0;
-        window.oyunDongusu = null; window.oyunAktif = false;
-
-        // Hafıza
-        try {
-            window.rekor = localStorage.getItem('yilanRekorV7') || 0;
-            document.getElementById('rekorYazi').innerText = window.rekor;
-        } catch(e) {}
-
-        // Canvas Hazırlıkları
-        window.canvasE = document.getElementById('canvasEditor');
-        window.ctxE = window.canvasE.getContext('2d');
-        window.canvasO = document.getElementById('canvasOyun');
-        window.ctxO = window.canvasO.getContext('2d');
-
-        // --- MENÜ GEÇİŞLERİ ---
-        window.ekranGecis = function(hedefEkran) {
-            document.getElementById('ekran-menu').style.display = 'none';
-            document.getElementById('ekran-editor').style.display = 'none';
-            document.getElementById('ekran-oyun').style.display = 'none';
-            document.getElementById('ekran-oyun-sonu').style.display = 'none';
+        // Sayfa ve tüm elementler yüklendikten sonra komutları bağlar (Hata önleyici)
+        window.addEventListener('load', function() {
             
-            document.getElementById(hedefEkran).style.display = 'flex';
-            window.oyunAktif = false;
-            cancelAnimationFrame(window.oyunDongusu);
-
-            if (hedefEkran === 'ekran-editor') {
-                window.boyut = 18; 
-                window.canvasE.width = window.boyut * window.hucre; 
-                window.canvasE.height = window.boyut * window.hucre;
-                window.editorCiz();
-            }
-        };
-
-        window.renkSec = function(el, renk) {
-            document.querySelectorAll('.renk-btn').forEach(function(b) { b.classList.remove('secili'); });
-            el.classList.add('secili');
-            window.yilanRengi = renk;
-        };
-
-        window.meyveSec = function(el, tip) {
-            document.querySelectorAll('.meyve-btn').forEach(function(b) { b.classList.remove('secili'); });
-            el.classList.add('secili');
-            window.editorMeyve = tip;
-        };
-
-        // --- KADO MODU (GÜVENLİ) ---
-        window.kadoModuBaslat = function() {
             try {
-                window.haritaMeyveleri = [];
-                window.boyut = 18;
-                var h = window.hucre;
-                function ekle(c, r) { window.haritaMeyveleri.push({x: c*h, y: r*h, tip: 'normal'}); }
+                // Temel Oyun Değişkenleri
+                var hucre = 16;
+                var boyut = 18; 
+                var yilanRengi = '#39ff14';
+                var editorMeyve = 'normal';
+                var gecerliOzelMod = false;
 
-                // O
-                var c1 = [2,3,4,5]; for(var i=0; i<c1.length; i++) { ekle(c1[i],2); ekle(c1[i],8); }
-                var r1 = [3,4,5,6,7]; for(var i=0; i<r1.length; i++) { ekle(2,r1[i]); ekle(5,r1[i]); }
-                // C
-                var c2 = [10,11,12,13,14]; for(var i=0; i<c2.length; i++) { ekle(c2[i],2); ekle(c2[i],8); }
-                var r2 = [3,4,5,6,7]; for(var i=0; i<r2.length; i++) { ekle(10,r2[i]); }
-                // K
-                var r3 = [11,12,13,14,15,16]; for(var i=0; i<r3.length; i++) { ekle(1,r3[i]); }
-                ekle(4,11); ekle(3,12); ekle(2,13); ekle(2,14); ekle(3,15); ekle(4,16);
-                // A
-                ekle(6,11); ekle(6,14);
-                var r4 = [12,13,14,15,16]; for(var i=0; i<r4.length; i++) { ekle(5,r4[i]); ekle(7,r4[i]); }
-                // D
-                var r5 = [11,12,13,14,15,16]; for(var i=0; i<r5.length; i++) { ekle(9,r5[i]); }
-                ekle(10,11); ekle(11,11); ekle(10,16); ekle(11,16);
-                var r6 = [12,13,14,15]; for(var i=0; i<r6.length; i++) { ekle(12,r6[i]); }
-                // O 
-                var c3 = [14,15,16]; for(var i=0; i<c3.length; i++) { ekle(c3[i],11); ekle(c3[i],16); }
-                var r7 = [12,13,14,15]; for(var i=0; i<r7.length; i++) { ekle(14,r7[i]); ekle(16,r7[i]); }
+                var yilan = { x: 0, y: 0, dx: hucre, dy: 0, kuyruk: [], uzunluk: 4 };
+                var meyveler = [];
+                var haritaMeyveleri = []; 
 
-                window.oyunuBaslat(true);
-            } catch(err) {
-                alert("Kado Hatası: " + err.message);
-            }
-        };
+                var skor = 0; var rekor = 0;
+                var tabanHiz = 10; var hiz = 10; var sayac = 0;
+                var yonKilit = false; var buffSuresi = 0;
+                var oyunDongusu; var oyunAktif = false;
 
-        // --- HARİTA EDİTÖRÜ ---
-        window.editorDoldur = function() {
-            window.haritaMeyveleri = [];
-            var merkez = Math.floor(window.boyut/2) * window.hucre;
-            for(var r=0; r<window.boyut; r++) {
-                for(var c=0; c<window.boyut; c++) {
-                    var hx = c * window.hucre; var hy = r * window.hucre;
-                    if(hx !== merkez || hy !== merkez) window.haritaMeyveleri.push({x: hx, y: hy, tip: window.editorMeyve});
+                var canvasE = document.getElementById('canvasEditor');
+                var ctxE = canvasE.getContext('2d');
+                var canvasO = document.getElementById('canvasOyun');
+                var ctxO = canvasO.getContext('2d');
+
+                // Rekor Çekme
+                try {
+                    rekor = localStorage.getItem('snakeV8Rekor') || 0;
+                    document.getElementById('rekorYazi').innerText = rekor;
+                } catch(e) {}
+
+                // --- 1. BUTONLARA TIKLAMA GÖREVLERİ EKLENİYOR ---
+                
+                // Menü Geçişleri
+                document.getElementById('btn-basla-normal').addEventListener('click', function() { oyunuBaslat(false); });
+                document.getElementById('btn-harita-yap').addEventListener('click', function() { ekranGecis('ekran-editor'); });
+                document.getElementById('btn-kado-modu').addEventListener('click', function() { kadoModuBaslat(); });
+                
+                document.getElementById('btn-oyna-ozel').addEventListener('click', function() { oyunuBaslat(true); });
+                document.getElementById('btn-ana-menu-1').addEventListener('click', function() { ekranGecis('ekran-menu'); });
+                
+                document.getElementById('btn-tekrar').addEventListener('click', function() { oyunuBaslat(gecerliOzelMod); });
+                document.getElementById('btn-ana-menu-2').addEventListener('click', function() { ekranGecis('ekran-menu'); });
+
+                // Renk Seçiciler
+                var renkKutulari = document.querySelectorAll('.renk-kutu');
+                renkKutulari.forEach(function(kutu) {
+                    kutu.addEventListener('click', function() {
+                        renkKutulari.forEach(function(b) { b.classList.remove('secili'); });
+                        this.classList.add('secili');
+                        yilanRengi = this.getAttribute('data-renk');
+                    });
+                });
+
+                // Meyve Seçiciler
+                var meyveKutulari = document.querySelectorAll('.meyve-secim');
+                meyveKutulari.forEach(function(kutu) {
+                    kutu.addEventListener('click', function() {
+                        meyveKutulari.forEach(function(b) { b.classList.remove('secili'); });
+                        this.classList.add('secili');
+                        editorMeyve = this.getAttribute('data-tip');
+                    });
+                });
+
+                // Editör Doldur/Temizle
+                document.getElementById('btn-doldur').addEventListener('click', function() {
+                    haritaMeyveleri = [];
+                    var merkez = Math.floor(boyut/2) * hucre;
+                    for(var r=0; r<boyut; r++) {
+                        for(var c=0; c<boyut; c++) {
+                            var hx = c * hucre; var hy = r * hucre;
+                            if(hx !== merkez || hy !== merkez) {
+                                haritaMeyveleri.push({x: hx, y: hy, tip: editorMeyve});
+                            }
+                        }
+                    }
+                    editorCiz();
+                });
+
+                document.getElementById('btn-temizle').addEventListener('click', function() {
+                    haritaMeyveleri = []; editorCiz();
+                });
+
+                // Yön Tuşları (Hem fare hem dokunma)
+                function yonBagla(id, yon) {
+                    var el = document.getElementById(id);
+                    el.addEventListener('mousedown', function(e) { e.preventDefault(); yonVer(yon); });
+                    el.addEventListener('touchstart', function(e) { e.preventDefault(); yonVer(yon); }, {passive: false});
                 }
-            }
-            window.editorCiz();
-        };
+                yonBagla('btn-yukari', 'yukari');
+                yonBagla('btn-asagi', 'asagi');
+                yonBagla('btn-sola', 'sola');
+                yonBagla('btn-saga', 'saga');
 
-        window.editorTemizle = function() { window.haritaMeyveleri = []; window.editorCiz(); };
+                document.addEventListener('keydown', function(e) {
+                    if(!oyunAktif) return;
+                    if(e.key === 'ArrowUp' || e.key === 'w') yonVer('yukari');
+                    if(e.key === 'ArrowDown' || e.key === 's') yonVer('asagi');
+                    if(e.key === 'ArrowLeft' || e.key === 'a') yonVer('sola');
+                    if(e.key === 'ArrowRight' || e.key === 'd') yonVer('saga');
+                });
 
-        window.cizimVar = false; window.siliyorMu = false;
-        
-        window.canvasE.onmousedown = function(e) { window.cizimVar = true; window.editorIslem(e, true); };
-        window.canvasE.onmousemove = function(e) { if(window.cizimVar) window.editorIslem(e, false); };
-        window.onmouseup = function() { window.cizimVar = false; };
-        
-        window.canvasE.ontouchstart = function(e) { e.preventDefault(); window.cizimVar = true; window.editorIslem(e.touches[0], true); };
-        window.canvasE.ontouchmove = function(e) { e.preventDefault(); if(window.cizimVar) window.editorIslem(e.touches[0], false); };
-        window.ontouchend = function() { window.cizimVar = false; };
+                // --- 2. OYUN FONKSİYONLARI ---
+                
+                function ekranGecis(hedefEkran) {
+                    document.getElementById('ekran-menu').style.display = 'none';
+                    document.getElementById('ekran-editor').style.display = 'none';
+                    document.getElementById('ekran-oyun').style.display = 'none';
+                    document.getElementById('ekran-oyun-sonu').style.display = 'none';
+                    
+                    document.getElementById(hedefEkran).style.display = 'flex';
+                    oyunAktif = false;
+                    cancelAnimationFrame(oyunDongusu);
 
-        window.editorIslem = function(e, ilk) {
-            var rect = window.canvasE.getBoundingClientRect();
-            var x = Math.floor((e.clientX - rect.left) / window.hucre) * window.hucre;
-            var y = Math.floor((e.clientY - rect.top) / window.hucre) * window.hucre;
-            
-            if(x < 0 || x >= window.canvasE.width || y < 0 || y >= window.canvasE.height) return;
-            if(x === Math.floor(window.boyut/2)*window.hucre && y === Math.floor(window.boyut/2)*window.hucre) return;
-
-            var i = window.haritaMeyveleri.findIndex(function(m) { return m.x === x && m.y === y; });
-            if(ilk) window.siliyorMu = (i > -1);
-
-            if(window.siliyorMu && i > -1) window.haritaMeyveleri.splice(i, 1);
-            else if(!window.siliyorMu && i === -1) window.haritaMeyveleri.push({x: x, y: y, tip: window.editorMeyve});
-            window.editorCiz();
-        };
-
-        window.editorCiz = function() {
-            window.ctxE.clearRect(0,0,window.canvasE.width,window.canvasE.height);
-            window.izgaraCiz(window.ctxE, window.canvasE);
-            window.haritaMeyveleri.forEach(function(m) { window.cizSekil(window.ctxE, m.x, m.y, m.tip); });
-            window.ctxE.fillStyle = window.yilanRengi; window.ctxE.globalAlpha = 0.5;
-            window.ctxE.fillRect(Math.floor(window.boyut/2)*window.hucre, Math.floor(window.boyut/2)*window.hucre, window.hucre-1, window.hucre-1);
-            window.ctxE.globalAlpha = 1.0;
-        };
-
-        // --- OYUN ÇEKİRDEĞİ ---
-        window.oyunuBaslat = function(ozelMi) {
-            window.gecerliOzelMod = ozelMi;
-            window.ekranGecis('ekran-oyun');
-            
-            if(!ozelMi) window.boyut = 18; 
-            window.canvasO.width = window.boyut * window.hucre; 
-            window.canvasO.height = window.boyut * window.hucre;
-
-            window.yilan.x = Math.floor(window.boyut/2) * window.hucre; 
-            window.yilan.y = Math.floor(window.boyut/2) * window.hucre;
-            window.yilan.kuyruk = []; window.yilan.uzunluk = 4; window.yilan.dx = window.hucre; window.yilan.dy = 0;
-            
-            window.skor = 0; document.getElementById('skorYazi').innerText = window.skor;
-            window.tabanHiz = 10; window.hiz = window.tabanHiz; window.buffSuresi = 0; document.getElementById('buffYazi').innerText = "";
-            window.yonKilit = false;
-            
-            if(ozelMi) {
-                window.meyveler = [];
-                for(var i=0; i<window.haritaMeyveleri.length; i++) {
-                    window.meyveler.push({x: window.haritaMeyveleri[i].x, y: window.haritaMeyveleri[i].y, tip: window.haritaMeyveleri[i].tip, sure: null});
+                    if (hedefEkran === 'ekran-editor') {
+                        boyut = 18; 
+                        canvasE.width = boyut * hucre; canvasE.height = boyut * hucre;
+                        editorCiz();
+                    }
                 }
-                if(window.meyveler.length === 0) window.rasgeleMeyve('normal');
-            } else {
-                window.meyveler = []; window.rasgeleMeyve('normal');
-            }
 
-            window.oyunAktif = true;
-            window.animasyonId = requestAnimationFrame(window.motor);
-        };
+                // Hatasız (Düz Array) Kado Modu
+                function kadoModuBaslat() {
+                    haritaMeyveleri = [];
+                    boyut = 18;
+                    
+                    var noktalar = [
+                        // O
+                        {c:2, r:2}, {c:3, r:2}, {c:4, r:2}, {c:5, r:2},
+                        {c:2, r:8}, {c:3, r:8}, {c:4, r:8}, {c:5, r:8},
+                        {c:2, r:3}, {c:2, r:4}, {c:2, r:5}, {c:2, r:6}, {c:2, r:7},
+                        {c:5, r:3}, {c:5, r:4}, {c:5, r:5}, {c:5, r:6}, {c:5, r:7},
+                        // C
+                        {c:10,r:2}, {c:11,r:2}, {c:12,r:2}, {c:13,r:2}, {c:14,r:2},
+                        {c:10,r:8}, {c:11,r:8}, {c:12,r:8}, {c:13,r:8}, {c:14,r:8},
+                        {c:10,r:3}, {c:10,r:4}, {c:10,r:5}, {c:10,r:6}, {c:10,r:7},
+                        // K
+                        {c:1,r:11}, {c:1,r:12}, {c:1,r:13}, {c:1,r:14}, {c:1,r:15}, {c:1,r:16},
+                        {c:4,r:11}, {c:3,r:12}, {c:2,r:13}, {c:2,r:14}, {c:3,r:15}, {c:4,r:16},
+                        // A
+                        {c:6,r:11}, {c:6,r:14},
+                        {c:5,r:12}, {c:5,r:13}, {c:5,r:14}, {c:5,r:15}, {c:5,r:16},
+                        {c:7,r:12}, {c:7,r:13}, {c:7,r:14}, {c:7,r:15}, {c:7,r:16},
+                        // D
+                        {c:9,r:11}, {c:9,r:12}, {c:9,r:13}, {c:9,r:14}, {c:9,r:15}, {c:9,r:16},
+                        {c:10,r:11}, {c:11,r:11}, {c:10,r:16}, {c:11,r:16},
+                        {c:12,r:12}, {c:12,r:13}, {c:12,r:14}, {c:12,r:15},
+                        // O (Alt)
+                        {c:14,r:11}, {c:15,r:11}, {c:16,r:11},
+                        {c:14,r:16}, {c:15,r:16}, {c:16,r:16},
+                        {c:14,r:12}, {c:14,r:13}, {c:14,r:14}, {c:14,r:15},
+                        {c:16,r:12}, {c:16,r:13}, {c:16,r:14}, {c:16,r:15}
+                    ];
 
-        window.rasgeleMeyve = function(tip) {
-            if(window.yilan.kuyruk.length + window.meyveler.length >= window.boyut * window.boyut) return;
-            var bitti = false; var deneme = 0;
-            while(!bitti && deneme < 200) {
-                var rx = Math.floor(Math.random() * window.boyut) * window.hucre;
-                var ry = Math.floor(Math.random() * window.boyut) * window.hucre;
-                var carpis = window.yilan.kuyruk.some(function(k) { return k.x === rx && k.y === ry; }) || 
-                             window.meyveler.some(function(m) { return m.x === rx && m.y === ry; }) || 
-                             (window.yilan.x === rx && window.yilan.y === ry);
-                if(!carpis) {
-                    window.meyveler.push({x: rx, y: ry, tip: tip, sure: (tip !== 'normal' ? 150 : null)});
-                    bitti = true;
+                    for(var i=0; i<noktalar.length; i++) {
+                        haritaMeyveleri.push({x: noktalar[i].c * hucre, y: noktalar[i].r * hucre, tip: 'normal'});
+                    }
+
+                    oyunuBaslat(true);
                 }
-                deneme++;
-            }
-        };
 
-        window.yonVer = function(yon, e) {
-            if(e) e.preventDefault();
-            if(window.yonKilit || !window.oyunAktif) return;
-            if(yon === 'yukari' && window.yilan.dy === 0) { window.yilan.dy = -window.hucre; window.yilan.dx = 0; window.yonKilit = true; }
-            else if(yon === 'asagi' && window.yilan.dy === 0) { window.yilan.dy = window.hucre; window.yilan.dx = 0; window.yonKilit = true; }
-            else if(yon === 'sola' && window.yilan.dx === 0) { window.yilan.dx = -window.hucre; window.yilan.dy = 0; window.yonKilit = true; }
-            else if(yon === 'saga' && window.yilan.dx === 0) { window.yilan.dx = window.hucre; window.yilan.dy = 0; window.yonKilit = true; }
-        };
+                // Editör Çizim Olayları
+                var cizimVar = false; var siliyorMu = false;
+                
+                canvasE.addEventListener('mousedown', function(e) { cizimVar = true; editorIslem(e, true); });
+                canvasE.addEventListener('mousemove', function(e) { if(cizimVar) editorIslem(e, false); });
+                window.addEventListener('mouseup', function() { cizimVar = false; });
+                
+                canvasE.addEventListener('touchstart', function(e) { e.preventDefault(); cizimVar = true; editorIslem(e.touches[0], true); }, {passive: false});
+                canvasE.addEventListener('touchmove', function(e) { e.preventDefault(); if(cizimVar) editorIslem(e.touches[0], false); }, {passive: false});
+                window.addEventListener('touchend', function() { cizimVar = false; });
 
-        document.onkeydown = function(e) {
-            if(!window.oyunAktif) return;
-            if(e.key === 'ArrowUp' || e.key === 'w') window.yonVer('yukari');
-            if(e.key === 'ArrowDown' || e.key === 's') window.yonVer('asagi');
-            if(e.key === 'ArrowLeft' || e.key === 'a') window.yonVer('sola');
-            if(e.key === 'ArrowRight' || e.key === 'd') window.yonVer('saga');
-        };
+                function editorIslem(e, ilk) {
+                    var rect = canvasE.getBoundingClientRect();
+                    var x = Math.floor((e.clientX - rect.left) / hucre) * hucre;
+                    var y = Math.floor((e.clientY - rect.top) / hucre) * hucre;
+                    
+                    if(x < 0 || x >= canvasE.width || y < 0 || y >= canvasE.height) return;
+                    if(x === Math.floor(boyut/2)*hucre && y === Math.floor(boyut/2)*hucre) return;
 
-        window.izgaraCiz = function(hedefCtx, c) {
-            hedefCtx.strokeStyle = '#222'; hedefCtx.lineWidth = 1;
-            for(var x=0; x<=c.width; x+=window.hucre) { hedefCtx.beginPath(); hedefCtx.moveTo(x,0); hedefCtx.lineTo(x,c.height); hedefCtx.stroke(); }
-            for(var y=0; y<=c.height; y+=window.hucre) { hedefCtx.beginPath(); hedefCtx.moveTo(0,y); hedefCtx.lineTo(c.width,y); hedefCtx.stroke(); }
-        };
+                    var kacinci = haritaMeyveleri.findIndex(function(m) { return m.x === x && m.y === y; });
+                    if(ilk) siliyorMu = (kacinci > -1);
 
-        window.cizSekil = function(hedefCtx, x, y, tip, sure) {
-            if(tip === 'normal') hedefCtx.fillStyle = '#e74c3c';
-            else if(tip === 'hiz') hedefCtx.fillStyle = '#f39c12';
-            else if(tip === 'yavas') hedefCtx.fillStyle = '#3498db';
-            else if(tip === 'zehir') hedefCtx.fillStyle = '#9b59b6';
-            
-            if(sure && sure < 30 && sure % 4 < 2) hedefCtx.fillStyle = 'transparent';
-            hedefCtx.fillRect(x, y, window.hucre-1, window.hucre-1);
-        };
+                    if(siliyorMu && kacinci > -1) haritaMeyveleri.splice(kacinci, 1);
+                    else if(!siliyorMu && kacinci === -1) haritaMeyveleri.push({x: x, y: y, tip: editorMeyve});
+                    editorCiz();
+                }
 
-        window.motor = function() {
-            if(!window.oyunAktif) return;
-            window.animasyonId = requestAnimationFrame(window.motor);
+                function editorCiz() {
+                    ctxE.clearRect(0,0,canvasE.width,canvasE.height);
+                    izgaraCiz(ctxE, canvasE);
+                    haritaMeyveleri.forEach(function(m) { cizSekil(ctxE, m.x, m.y, m.tip); });
+                    ctxE.fillStyle = yilanRengi; ctxE.globalAlpha = 0.5;
+                    ctxE.fillRect(Math.floor(boyut/2)*hucre, Math.floor(boyut/2)*hucre, hucre-1, hucre-1);
+                    ctxE.globalAlpha = 1.0;
+                }
 
+                function oyunuBaslat(ozelMi) {
+                    gecerliOzelMod = ozelMi;
+                    ekranGecis('ekran-oyun');
+                    
+                    if(!ozelMi) boyut = 18; 
+                    canvasO.width = boyut * hucre; canvasO.height = boyut * hucre;
+
+                    yilan.x = Math.floor(boyut/2) * hucre; yilan.y = Math.floor(boyut/2) * hucre;
+                    yilan.kuyruk = []; yilan.uzunluk = 4; yilan.dx = hucre; yilan.dy = 0;
+                    
+                    skor = 0; document.getElementById('skorYazi').innerText = skor;
+                    tabanHiz = 10; hiz = tabanHiz; buffSuresi = 0; document.getElementById('buffYazi').innerText = "";
+                    yonKilit = false;
+                    
+                    if(ozelMi) {
+                        meyveler = [];
+                        for(var i=0; i<haritaMeyveleri.length; i++) {
+                            meyveler.push({x: haritaMeyveleri[i].x, y: haritaMeyveleri[i].y, tip: haritaMeyveleri[i].tip, sure: null});
+                        }
+                        if(meyveler.length === 0) rasgeleMeyve('normal');
+                    } else {
+                        meyveler = []; rasgeleMeyve('normal');
+                    }
+
+                    oyunAktif = true;
+                    animasyonId = requestAnimationFrame(motor);
+                }
+
+                function rasgeleMeyve(tip) {
+                    if(yilan.kuyruk.length + meyveler.length >= boyut * boyut) return;
+                    var bitti = false; var deneme = 0;
+                    while(!bitti && deneme < 200) {
+                        var rx = Math.floor(Math.random() * boyut) * hucre;
+                        var ry = Math.floor(Math.random() * boyut) * hucre;
+                        var carpis = yilan.kuyruk.some(function(k) { return k.x === rx && k.y === ry; }) || 
+                                     meyveler.some(function(m) { return m.x === rx && m.y === ry; }) || 
+                                     (yilan.x === rx && yilan.y === ry);
+                        if(!carpis) {
+                            meyveler.push({x: rx, y: ry, tip: tip, sure: (tip !== 'normal' ? 150 : null)});
           
