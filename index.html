@@ -2,403 +2,451 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Yılan: Özel Sürüm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yılan: Yeniden Doğuş</title>
     <style>
-        * { box-sizing: border-box; }
+        /* SIFIRDAN TEMİZ CSS */
         body {
             margin: 0; padding: 0;
-            background-color: #1a1a24; color: #ecf0f1;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start;
-            height: 100dvh; max-height: 100dvh; overflow: hidden; 
-            touch-action: none; user-select: none; -webkit-user-select: none;
+            background-color: #121212; color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; overflow: hidden;
+            /* touch-action body'de YOK, tuşların basmasını engellemeyecek */
         }
 
-        /* Ortak Buton Stilleri */
-        .primary-btn {
-            background-color: #39ff14; color: #000; border: 2px solid #28b40e;
+        .ekran {
+            display: none; /* Ekranlar arası geçiş için */
+            flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; padding: 10px; box-sizing: border-box;
+        }
+
+        .aktif-ekran { display: flex; }
+
+        /* Butonlar */
+        .buton {
+            background-color: #39ff14; color: #000;
+            border: none; border-radius: 10px;
             padding: 15px 20px; font-size: 18px; font-weight: bold;
-            border-radius: 8px; margin-bottom: 12px; cursor: pointer;
-            width: 85%; max-width: 320px; text-align: center;
-            box-shadow: 0 4px 0 #28b40e; transition: 0.1s; text-transform: uppercase;
+            margin: 10px 0; width: 90%; max-width: 300px;
+            cursor: pointer; text-align: center;
+            box-shadow: 0 5px 0 #209907;
         }
-        .secondary-btn {
-            background-color: #2c3e50; color: #fff; border: 2px solid #39ff14;
-            padding: 12px 20px; font-size: 16px; font-weight: bold;
-            border-radius: 8px; margin-bottom: 12px; cursor: pointer;
-            width: 85%; max-width: 320px; text-align: center;
-            box-shadow: 0 4px 0 #151e27; transition: 0.1s;
-        }
-        .primary-btn:active, .secondary-btn:active { transform: translateY(4px); box-shadow: none; }
+        .buton:active { transform: translateY(5px); box-shadow: none; }
+        .buton-mavi { background-color: #3498db; box-shadow: 0 5px 0 #1c6ea4; color: #fff;}
+        .buton-kirmizi { background-color: #e74c3c; box-shadow: 0 5px 0 #9c2b1f; color: #fff;}
 
-        /* --- BAŞLANGIÇ MENÜSÜ --- */
-        #start-menu {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(26, 26, 36, 0.95); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50;
-        }
-        #start-menu h1 { font-size: 45px; color: #39ff14; text-shadow: 0 0 15px rgba(57, 255, 20, 0.7); margin-bottom: 10px; letter-spacing: 5px; }
+        /* Renk ve Meyve Seçiciler */
+        .secici-kutu { display: flex; gap: 10px; margin: 15px 0; background: #222; padding: 10px; border-radius: 10px; }
+        .renk-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+        .renk-btn.secili { border-color: #fff; transform: scale(1.1); }
         
-        .color-picker-container {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 10px; margin-bottom: 30px;
-        }
-        input[type="color"] { border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; background: transparent; }
+        .meyve-btn { font-size: 24px; padding: 5px 10px; cursor: pointer; opacity: 0.4; border-bottom: 2px solid transparent; }
+        .meyve-btn.secili { opacity: 1; border-color: #39ff14; }
 
-        /* --- HARİTA YAPICI (EDİTÖR) --- */
-        #editor-ui {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1a1a24; flex-direction: column; align-items: center; padding-top: 10px; z-index: 40;
+        /* Oyun Alanı */
+        .oyun-baslik { display: flex; justify-content: space-between; width: 100%; max-width: 350px; margin-bottom: 10px; font-size: 18px; font-weight: bold;}
+        #canvas-kutu {
+            background-color: #000; border: 3px solid #444; border-radius: 5px;
+            touch-action: none; /* Sadece oyun alanında kaydırma iptal */
         }
-        .editor-controls {
-            display: flex; flex-direction: column; width: 95%; max-width: 400px;
-            background: #252530; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px;
-        }
-        .slider-group { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; font-size: 14px;}
-        .slider-group input { flex-grow: 1; margin: 0 10px; accent-color: #39ff14; }
-        
-        .fruit-selector { display: flex; justify-content: space-around; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px; margin-bottom: 10px; }
-        .f-btn { 
-            background: transparent; border: 2px solid transparent; border-radius: 8px; 
-            padding: 5px 10px; font-size: 20px; cursor: pointer; opacity: 0.5; transition: 0.2s;
-        }
-        .f-btn.active { opacity: 1; border-color: #39ff14; background: rgba(57, 255, 20, 0.1); }
+        canvas { display: block; background: transparent; }
 
-        .editor-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
-        .editor-btn-row button { flex: 1; padding: 8px; font-size: 14px; margin-bottom: 0; }
+        /* Yön Tuşları */
+        .yon-tuslari {
+            display: grid; grid-template-columns: 70px 70px 70px; grid-template-rows: 70px 70px 70px;
+            gap: 10px; margin-top: 15px; touch-action: none;
+        }
+        .yon-btn {
+            background-color: #333; color: #fff; font-size: 30px;
+            border-radius: 15px; display: flex; justify-content: center; align-items: center;
+            user-select: none; cursor: pointer; box-shadow: 0 5px 0 #111;
+        }
+        .yon-btn:active { background-color: #39ff14; color: #000; transform: translateY(5px); box-shadow: none; }
+        #yukari { grid-column: 2; grid-row: 1; }
+        #sola { grid-column: 1; grid-row: 2; }
+        #saga { grid-column: 3; grid-row: 2; }
+        #asagi { grid-column: 2; grid-row: 3; }
 
-        /* --- OYUN ARAYÜZÜ --- */
-        #game-ui {
-            display: none; width: 100%; height: 100%;
-            flex-direction: column; align-items: center; justify-content: space-between; padding-bottom: 20px;
-        }
-        #game-header { margin-top: 15px; width: 100%; text-align: center; position: relative;}
-        #game-header h2 { margin: 0; font-size: 24px; color: #39ff14; letter-spacing: 2px; }
-        #score-board { 
-            font-size: 16px; font-weight: bold; margin-top: 5px; 
-            background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 5px; border: 1px solid #333; display: inline-block;
-        }
-        .highlight { color: #f1c40f; }
-
-        #buff-indicator {
-            position: absolute; top: 0; right: 10px; font-weight: bold; font-size: 18px; display: none;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-
-        /* Canvas Taşıyıcı */
-        .canvas-wrapper {
-            margin: auto 0; display: flex; justify-content: center; align-items: center;
-            background: #0f1c0f; border: 4px solid #333; border-radius: 5px; box-shadow: 0 5px 25px rgba(0,0,0,0.8);
-            max-width: 95vw; max-height: 50vh; overflow: hidden;
-        }
-        canvas { background-color: transparent; display: block; max-width: 100%; max-height: 100%; object-fit: contain; touch-action: none; }
-
-        /* Sanal Konsol */
-        #controls {
-            display: grid; grid-template-columns: 70px 70px 70px; grid-template-rows: 70px 70px 70px; gap: 10px; margin-bottom: 10px;
-        }
-        .dir-btn {
-            background-color: #2c3e50; border: 2px solid #1a252f; border-radius: 15px; color: rgba(255,255,255,0.7);
-            font-size: 30px; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 0 #151e27; cursor: pointer;
-        }
-        .dir-btn:active { transform: translateY(6px); box-shadow: none; background-color: #39ff14; color: #000; border-color: #39ff14; }
-        #btn-up { grid-column: 2; grid-row: 1; }
-        #btn-left { grid-column: 1; grid-row: 2; }
-        #btn-right { grid-column: 3; grid-row: 2; }
-        #btn-down { grid-column: 2; grid-row: 3; }
-
-        /* Oyun Sonu */
-        #game-over {
-            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(10, 10, 15, 0.95); padding: 30px; border: 3px solid #ff003c; border-radius: 10px;
-            text-align: center; z-index: 60; width: 85%; max-width: 320px; box-shadow: 0 0 30px rgba(255, 0, 60, 0.4);
-        }
-        #game-over h2 { color: #ff003c; margin-top: 0; font-size: 26px; }
+        /* Uyarılar */
+        #buff-yazisi { color: #f1c40f; font-weight: bold; height: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="start-menu">
-        <h1>S N A K E</h1>
+    <div id="ekran-menu" class="ekran aktif-ekran">
+        <h1 style="color: #39ff14; font-size: 50px; margin: 0 0 20px 0;">SNAKE</h1>
         
-        <div class="color-picker-container">
-            <span style="font-size: 18px; font-weight: bold;">Yılan Rengi:</span>
-            <input type="color" id="snake-color" value="#39ff14">
+        <p style="margin-bottom: 5px; color: #ccc;">Yılan Rengi Seç:</p>
+        <div class="secici-kutu">
+            <div class="renk-btn secili" style="background: #39ff14;" onclick="renkSec(this, '#39ff14')"></div>
+            <div class="renk-btn" style="background: #3498db;" onclick="renkSec(this, '#3498db')"></div>
+            <div class="renk-btn" style="background: #f1c40f;" onclick="renkSec(this, '#f1c40f')"></div>
+            <div class="renk-btn" style="background: #e74c3c;" onclick="renkSec(this, '#e74c3c')"></div>
         </div>
 
-        <button class="primary-btn" onpointerdown="startGame(true, false)">📱 TAM EKRAN OYNA</button>
-        <button class="secondary-btn" onpointerdown="openEditor()">🛠️ ÖZEL HARİTA YAP</button>
+        <button class="buton" onclick="oyunuBaslat(false)">OYUNA BAŞLA</button>
+        <button class="buton buton-mavi" onclick="ekranGoster('ekran-editor')">ÖZEL HARİTA YAP</button>
     </div>
 
-    <div id="editor-ui">
-        <h2 style="color: #39ff14; margin: 5px 0;">HARİTA YAPICI</h2>
-        <p style="margin: 0 0 5px 0; font-size: 13px; color: #aaa;">Ekranda sürükleyerek boya</p>
+    <div id="ekran-editor" class="ekran">
+        <h2 style="color: #3498db; margin: 0 0 10px 0;">HARİTA YAPICI</h2>
         
-        <div class="editor-controls">
-            <div class="fruit-selector">
-                <div class="f-btn active" onpointerdown="selectEditorFruit('normal', this)">🍎</div>
-                <div class="f-btn" onpointerdown="selectEditorFruit('speed', this)">⚡</div>
-                <div class="f-btn" onpointerdown="selectEditorFruit('slow', this)">❄️</div>
-                <div class="f-btn" onpointerdown="selectEditorFruit('poison', this)">☠️</div>
-            </div>
-
-            <div class="slider-group">
-                <span>Genişlik:</span>
-                <input type="range" id="map-cols" min="10" max="30" value="20" oninput="resizeMap()">
-                <span id="col-val">20</span>
-            </div>
-            <div class="slider-group">
-                <span>Yükseklik:</span>
-                <input type="range" id="map-rows" min="10" max="30" value="20" oninput="resizeMap()">
-                <span id="row-val">20</span>
-            </div>
-            <div class="editor-btn-row">
-                <button class="secondary-btn" onpointerdown="fillMap()">Doldur</button>
-                <button class="secondary-btn" onpointerdown="clearMap()">Temizle</button>
-            </div>
+        <div class="secici-kutu" style="margin-top: 0;">
+            <div class="meyve-btn secili" onclick="meyveSec(this, 'normal')">🍎</div>
+            <div class="meyve-btn" onclick="meyveSec(this, 'speed')">⚡</div>
+            <div class="meyve-btn" onclick="meyveSec(this, 'slow')">❄️</div>
+            <div class="meyve-btn" onclick="meyveSec(this, 'poison')">☠️</div>
         </div>
 
-        <div class="canvas-wrapper" id="editor-canvas-container"></div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            Boyut: 
+            <input type="range" id="ayar-boyut" min="10" max="25" value="18" oninput="boyutDegistir()">
+            <span id="boyut-gosterge">18x18</span>
+        </div>
 
-        <button class="primary-btn" style="margin-top: 10px;" onpointerdown="startGame(true, true)">▶️ HARİTAYI OYNA</button>
-        <button class="secondary-btn" onpointerdown="backToMenu()">Ana Menü</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button class="buton" style="padding: 10px; margin: 0;" onclick="editorDoldur()">Doldur</button>
+            <button class="buton buton-kirmizi" style="padding: 10px; margin: 0;" onclick="editorTemizle()">Temizle</button>
+        </div>
+
+        <div id="editor-canvas-yeri"></div>
+        <p style="font-size: 12px; color: #888;">Ekrana tıklayarak veya sürükleyerek meyve ekle/sil.</p>
+
+        <button class="buton" onclick="oyunuBaslat(true)">BU HARİTAYI OYNA</button>
+        <button class="buton buton-mavi" onclick="ekranGoster('ekran-menu')">ANA MENÜ</button>
     </div>
 
-    <div id="game-ui">
-        <div id="game-header">
-            <h2>S N A K E</h2>
-            <div id="buff-indicator">HIZLANDIN!</div>
-            <div id="score-board">
-                SKOR: <span id="score" style="color:#fff;">0</span> | REKOR: <span id="high-score" class="highlight">0</span>
-            </div>
+    <div id="ekran-oyun" class="ekran">
+        <div class="oyun-baslik">
+            <span>Skor: <span id="skor-yazi">0</span></span>
+            <span id="buff-yazisi"></span>
+            <span>Rekor: <span id="rekor-yazi" style="color: #f1c40f;">0</span></span>
         </div>
 
-        <div class="canvas-wrapper" id="game-canvas-container">
-            <canvas id="gameCanvas"></canvas>
-        </div>
+        <div id="oyun-canvas-yeri" id="canvas-kutu"></div>
 
-        <div id="controls">
-            <div class="dir-btn" id="btn-up">▲</div>
-            <div class="dir-btn" id="btn-left">◀</div>
-            <div class="dir-btn" id="btn-right">▶</div>
-            <div class="dir-btn" id="btn-down">▼</div>
+        <div class="yon-tuslari">
+            <div id="yukari" class="yon-btn">▲</div>
+            <div id="sola" class="yon-btn">◀</div>
+            <div id="saga" class="yon-btn">▶</div>
+            <div id="asagi" class="yon-btn">▼</div>
         </div>
-    </div>
-
-    <div id="game-over">
-        <h2>OYUN BİTTİ</h2>
-        <div id="final-score" style="font-size: 18px; line-height: 1.5; color: #ccc;">Skorun: 0</div>
-        <button class="primary-btn" style="margin-top: 20px; width: 100%;" onpointerdown="window.resetGame()">YENİDEN BAŞLA</button>
-        <button class="secondary-btn" style="width: 100%;" onpointerdown="backToMenu()">ANA MENÜ</button>
+        
+        <div id="oyun-sonu-menu" style="display: none; flex-direction: column; position: absolute; background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; text-align: center;">
+            <h2 style="color: #e74c3c;">OYUN BİTTİ</h2>
+            <button class="buton" onclick="oyunuBaslat(gecerliModOzelMi)">TEKRAR DENE</button>
+            <button class="buton buton-mavi" onclick="ekranGoster('ekran-menu')">ANA MENÜ</button>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        // --- TEMEL DEĞİŞKENLER ---
+        const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const highScoreElement = document.getElementById('high-score');
-        const buffIndicator = document.getElementById('buff-indicator');
+        const hucreBoyutu = 16;
+        let hucreSayisi = 18; // Hem en hem boy
         
-        const grid = 16;
-        let cols = 20; let rows = 20;
-        let gameLoopId; let isGameRunning = false; let gameState = 'MENU';
+        let seciliYilanRengi = '#39ff14';
+        let seciliMeyveTipi = 'normal';
+        let gecerliModOzelMi = false;
+
+        let oyunDongusu;
+        let oyunDevamEdiyor = false;
         
-        let score = 0;
-        let highScore = localStorage.getItem('snakeArcadeHighScore') || 0;
-        highScoreElement.innerText = highScore;
+        // Yılan ve Meyveler
+        let yilan = { x: 0, y: 0, dx: hucreBoyutu, dy: 0, kuyruk: [], uzunluk: 4 };
+        let elmalar = []; // Oyundaki meyveler
+        let ozelHaritaElmalari = []; // Editördeki meyveler
 
-        // Hız Sistemleri
-        let calculatedBaseSpeed = 10; 
-        let currentSpeed = calculatedBaseSpeed;
-        let frameCount = 0; let changingDirection = false;
-        
-        let activeBuff = null; 
-        let buffTimer = 0;
+        // Skor ve Hız
+        let skor = 0;
+        let rekor = 0;
+        let tabanHiz = 10;
+        let gecerliHiz = 10;
+        let cerceveSayaci = 0;
+        let yonDegistiMi = false;
+        let aktifBuff = null;
+        let buffSuresi = 0;
 
-        let snakeColor = '#39ff14';
-        let snake = { x: 0, y: 0, dx: grid, dy: 0, cells: [], maxCells: 4 };
-        
-        let fruits = []; 
-        let customApples = []; 
-        let isCustomMode = false;
-        let currentEditorFruit = 'normal';
+        // Rekoru Yükle (Güvenli)
+        try {
+            rekor = localStorage.getItem('yilanRekorSifir') || 0;
+            document.getElementById('rekor-yazi').innerText = rekor;
+        } catch(e) { console.log("Hafıza engellendi."); }
 
-        // Ses Motoru
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
 
-        function initAudio() {
-            try {
-                if (!audioCtx) audioCtx = new AudioContext();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-            } catch(e) {}
+        // --- MENÜ VE ARAYÜZ FONKSİYONLARI ---
+        function ekranGoster(ekranID) {
+            document.getElementById('ekran-menu').classList.remove('aktif-ekran');
+            document.getElementById('ekran-editor').classList.remove('aktif-ekran');
+            document.getElementById('ekran-oyun').classList.remove('aktif-ekran');
+            
+            document.getElementById(ekranID).classList.add('aktif-ekran');
+            document.getElementById('oyun-sonu-menu').style.display = 'none';
+
+            if (ekranID === 'ekran-editor') {
+                document.getElementById('editor-canvas-yeri').appendChild(canvas);
+                canvasMuncelle();
+                editorCiz();
+            }
         }
 
-        function playSound(type) {
-            if (!audioCtx) return;
-            try {
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                
-                if (type === 'eat') {
-                    osc.type = 'square'; osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.05);
-                } else if (type === 'special') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-                } else if (type === 'crash') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.4);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-                }
-            } catch(e) {}
+        function renkSec(element, renkKodu) {
+            document.querySelectorAll('.renk-btn').forEach(btn => btn.classList.remove('secili'));
+            element.classList.add('secili');
+            seciliYilanRengi = renkKodu;
         }
 
-        // --- HARİTA VE EDİTÖR ---
-        window.selectEditorFruit = function(type, el) {
-            currentEditorFruit = type;
-            document.querySelectorAll('.f-btn').forEach(btn => btn.classList.remove('active'));
-            el.classList.add('active');
+        function meyveSec(element, tip) {
+            document.querySelectorAll('.meyve-btn').forEach(btn => btn.classList.remove('secili'));
+            element.classList.add('secili');
+            seciliMeyveTipi = tip;
         }
 
-        function resizeMap() {
-            cols = parseInt(document.getElementById('map-cols').value);
-            rows = parseInt(document.getElementById('map-rows').value);
-            document.getElementById('col-val').innerText = cols;
-            document.getElementById('row-val').innerText = rows;
-            canvas.width = cols * grid; canvas.height = rows * grid;
-            customApples = customApples.filter(a => a.x < canvas.width && a.y < canvas.height);
-            drawEditor();
+
+        // --- HARİTA EDİTÖRÜ FONKSİYONLARI ---
+        function boyutDegistir() {
+            hucreSayisi = parseInt(document.getElementById('ayar-boyut').value);
+            document.getElementById('boyut-gosterge').innerText = hucreSayisi + "x" + hucreSayisi;
+            canvasMuncelle();
+            
+            // Harita küçüldüyse dışarıda kalan elmaları sil
+            ozelHaritaElmalari = ozelHaritaElmalari.filter(e => e.x < canvas.width && e.y < canvas.height);
+            editorCiz();
         }
 
-        window.fillMap = function() {
-            customApples = [];
-            let cx = Math.floor(cols/2) * grid; let cy = Math.floor(rows/2) * grid;
-            for(let r=0; r<rows; r++) {
-                for(let c=0; c<cols; c++) {
-                    let x = c * grid; let y = r * grid;
-                    if(x !== cx || y !== cy) customApples.push({x, y, type: currentEditorFruit});
+        function canvasMuncelle() {
+            canvas.width = hucreSayisi * hucreBoyutu;
+            canvas.height = hucreSayisi * hucreBoyutu;
+        }
+
+        function editorDoldur() {
+            ozelHaritaElmalari = [];
+            let merkezX = Math.floor(hucreSayisi / 2) * hucreBoyutu;
+            let merkezY = Math.floor(hucreSayisi / 2) * hucreBoyutu;
+            
+            for (let r = 0; r < hucreSayisi; r++) {
+                for (let c = 0; c < hucreSayisi; c++) {
+                    let x = c * hucreBoyutu;
+                    let y = r * hucreBoyutu;
+                    if (x !== merkezX || y !== merkezY) { // Yılanın doğduğu yer boş kalsın
+                        ozelHaritaElmalari.push({ x: x, y: y, tip: seciliMeyveTipi });
+                    }
                 }
             }
-            drawEditor();
+            editorCiz();
         }
 
-        window.clearMap = function() { customApples = []; drawEditor(); }
+        function editorTemizle() {
+            ozelHaritaElmalari = [];
+            editorCiz();
+        }
 
-        let isDrawing = false; let drawMode = 'add'; 
+        // Editörde Tıklama/Sürükleme ile Çizim
+        let cizimYapiliyor = false;
+        let silmeModu = false;
 
-        canvas.addEventListener('pointerdown', (e) => {
-            if (gameState !== 'EDITOR') return;
-            isDrawing = true; handleEditorDraw(e, true);
-        });
-        canvas.addEventListener('pointermove', (e) => {
-            if (gameState !== 'EDITOR' || !isDrawing) return;
-            handleEditorDraw(e, false);
-        });
-        window.addEventListener('pointerup', () => isDrawing = false);
+        function editorTiklamaIsle(e, ilkTiklamaMi) {
+            if (document.getElementById('ekran-editor').classList.contains('aktif-ekran') === false) return;
 
-        function handleEditorDraw(e, isFirstTouch) {
             let rect = canvas.getBoundingClientRect();
-            let scaleX = canvas.width / rect.width; let scaleY = canvas.height / rect.height;
-            let cx = (e.clientX - rect.left) * scaleX; let cy = (e.clientY - rect.top) * scaleY;
-            let x = Math.floor(cx / grid) * grid; let y = Math.floor(cy / grid) * grid;
-            
+            let dokunmaX = e.touches ? e.touches[0].clientX : e.clientX;
+            let dokunmaY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            let x = Math.floor((dokunmaX - rect.left) / hucreBoyutu) * hucreBoyutu;
+            let y = Math.floor((dokunmaY - rect.top) / hucreBoyutu) * hucreBoyutu;
+
             if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
-            if (x === Math.floor(cols/2)*grid && y === Math.floor(rows/2)*grid) return; // Yılan merkezi korunur
+            if (x === Math.floor(hucreSayisi/2)*hucreBoyutu && y === Math.floor(hucreSayisi/2)*hucreBoyutu) return; // Merkez koruması
 
-            let index = customApples.findIndex(a => a.x === x && a.y === y);
-            if (isFirstTouch) drawMode = index > -1 ? 'remove' : 'add';
-            
-            if (drawMode === 'add' && index === -1) customApples.push({x, y, type: currentEditorFruit});
-            else if (drawMode === 'remove' && index > -1) customApples.splice(index, 1);
-            
-            drawEditor();
-        }
+            let varOlanIndex = ozelHaritaElmalari.findIndex(el => el.x === x && el.y === y);
 
-        function drawEditor() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); drawGrid();
-            
-            customApples.forEach(a => {
-                if(a.type === 'normal') ctx.fillStyle = '#ff003c';
-                else if(a.type === 'speed') ctx.fillStyle = '#f39c12';
-                else if(a.type === 'slow') ctx.fillStyle = '#00ffff';
-                else if(a.type === 'poison') ctx.fillStyle = '#8e44ad';
-                ctx.fillRect(a.x, a.y, grid-1, grid-1);
-            });
-
-            ctx.fillStyle = document.getElementById('snake-color').value; ctx.globalAlpha = 0.5;
-            ctx.fillRect(Math.floor(cols/2)*grid, Math.floor(rows/2)*grid, grid-1, grid-1); ctx.globalAlpha = 1.0;
-        }
-
-        // --- MENÜ GEÇİŞLERİ ---
-        window.openEditor = function() {
-            gameState = 'EDITOR'; document.getElementById('start-menu').style.display = 'none';
-            document.getElementById('editor-ui').style.display = 'flex';
-            document.getElementById('editor-canvas-container').appendChild(canvas); resizeMap();
-        }
-
-        window.backToMenu = function() {
-            isGameRunning = false; cancelAnimationFrame(gameLoopId);
-            document.getElementById('game-over').style.display = 'none'; document.getElementById('editor-ui').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'none'; document.getElementById('start-menu').style.display = 'flex';
-            gameState = 'MENU';
-        }
-
-        window.startGame = function(fullscreen, custom) {
-            initAudio(); snakeColor = document.getElementById('snake-color').value;
-            isCustomMode = custom; gameState = 'PLAYING';
-
-            if (fullscreen) {
-                try {
-                    let elem = document.documentElement;
-                    if (elem.requestFullscreen) { elem.requestFullscreen().then(() => screen.orientation.lock('portrait').catch(()=>{})).catch(()=>{}); } 
-                    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); setTimeout(() => screen.orientation.lock('portrait').catch(()=>{}), 500); }
-                } catch(e) {}
+            if (ilkTiklamaMi) {
+                silmeModu = (varOlanIndex > -1); // Eğer tıklanan yerde elma varsa silme moduna geç
             }
 
-            document.getElementById('start-menu').style.display = 'none'; document.getElementById('editor-ui').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex'; document.getElementById('game-canvas-container').appendChild(canvas);
+            if (silmeModu && varOlanIndex > -1) {
+                ozelHaritaElmalari.splice(varOlanIndex, 1);
+            } else if (!silmeModu && varOlanIndex === -1) {
+                ozelHaritaElmalari.push({ x: x, y: y, tip: seciliMeyveTipi });
+            }
 
-            if (!custom) { cols = 20; rows = 20; canvas.width = cols * grid; canvas.height = rows * grid; }
-            resetGameLogic(); isGameRunning = true; requestAnimationFrame(loop);
+            editorCiz();
         }
 
-        // --- OYUN MEKANİKLERİ ---
-        function resetGameLogic() {
-            snake.x = Math.floor(cols/2) * grid; snake.y = Math.floor(rows/2) * grid;
-            snake.cells = []; snake.maxCells = 4; snake.dx = grid; snake.dy = 0;
-            score = 0; calculatedBaseSpeed = 10; currentSpeed = calculatedBaseSpeed;
-            activeBuff = null; buffTimer = 0; buffIndicator.style.display = 'none';
-            
-            scoreElement.innerText = score; changingDirection = false;
-            document.getElementById('game-over').style.display = 'none';
+        canvas.addEventListener('mousedown', e => { cizimYapiliyor = true; editorTiklamaIsle(e, true); });
+        canvas.addEventListener('mousemove', e => { if(cizimYapiliyor) editorTiklamaIsle(e, false); });
+        window.addEventListener('mouseup', () => { cizimYapiliyor = false; });
 
-            if (isCustomMode) {
-                fruits = customApples.map(a => ({x: a.x, y: a.y, type: a.type, lifeTime: null}));
-                if (!fruits.some(f => f.type === 'normal')) spawnFruit('normal'); 
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); cizimYapiliyor = true; editorTiklamaIsle(e, true); }, {passive: false});
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); if(cizimYapiliyor) editorTiklamaIsle(e, false); }, {passive: false});
+        window.addEventListener('touchend', () => { cizimYapiliyor = false; });
+
+        function editorCiz() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            izgaraCiz();
+            ozelHaritaElmalari.forEach(elma => meyveCiz(elma.x, elma.y, elma.tip));
+            
+            // Yılan Merkezi Gösterimi
+            ctx.fillStyle = seciliYilanRengi; ctx.globalAlpha = 0.5;
+            ctx.fillRect(Math.floor(hucreSayisi/2)*hucreBoyutu, Math.floor(hucreSayisi/2)*hucreBoyutu, hucreBoyutu-1, hucreBoyutu-1);
+            ctx.globalAlpha = 1.0;
+        }
+
+
+        // --- OYUN FONKSİYONLARI ---
+        function oyunuBaslat(ozelHaritaGecerliMi) {
+            gecerliModOzelMi = ozelHaritaGecerliMi;
+            ekranGoster('ekran-oyun');
+            document.getElementById('oyun-canvas-yeri').appendChild(canvas);
+            
+            if (!ozelHaritaGecerliMi) {
+                hucreSayisi = 18; // Normal mod boyutu
+            }
+            canvasMuncelle();
+            
+            // Değişkenleri Sıfırla
+            yilan.x = Math.floor(hucreSayisi/2) * hucreBoyutu;
+            yilan.y = Math.floor(hucreSayisi/2) * hucreBoyutu;
+            yilan.kuyruk = [];
+            yilan.uzunluk = 4;
+            yilan.dx = hucreBoyutu; yilan.dy = 0;
+            
+            skor = 0; document.getElementById('skor-yazi').innerText = skor;
+            tabanHiz = 10; gecerliHiz = tabanHiz;
+            aktifBuff = null; buffSuresi = 0; document.getElementById('buff-yazisi').innerText = "";
+            yonDegistiMi = false;
+
+            if (ozelHaritaGecerliMi) {
+                elmalar = ozelHaritaElmalari.map(e => ({ x: e.x, y: e.y, tip: e.tip, sure: null }));
+                if (elmalar.length === 0) rastgeleMeyveOlustur('normal');
             } else {
-                fruits = []; spawnFruit('normal');
+                elmalar = [];
+                rastgeleMeyveOlustur('normal');
+            }
+
+            isGameRunning = true;
+            cancelAnimationFrame(oyunDongusu);
+            oyunDongusu = requestAnimationFrame(oyunMotoru);
+        }
+
+        function rastgeleMeyveOlustur(tip) {
+            // Güvenlik kilidi: Harita tamamen doluysa kilitlenme.
+            if (yilan.kuyruk.length + elmalar.length >= hucreSayisi * hucreBoyutu) return;
+
+            let yerlestirildi = false;
+            while (!yerlestirildi) {
+                let rx = Math.floor(Math.random() * hucreSayisi) * hucreBoyutu;
+                let ry = Math.floor(Math.random() * hucreSayisi) * hucreBoyutu;
+                
+                let yilanUstunde = yilan.kuyruk.some(h => h.x === rx && h.y === ry) || (yilan.x === rx && yilan.y === ry);
+                let elmaUstunde = elmalar.some(e => e.x === rx && e.y === ry);
+
+                if (!yilanUstunde && !elmaUstunde) {
+                    let sureLimiti = (tip !== 'normal') ? 150 : null; // Özel meyveler kaybolur
+                    elmalar.push({ x: rx, y: ry, tip: tip, sure: sureLimiti });
+                    yerlestirildi = true;
+                }
             }
         }
-        
-        window.resetGame = function() { resetGameLogic(); isGameRunning = true; requestAnimationFrame(loop); }
 
-        function spawnFruit(type) {
-            let placed = false;
-            let attempts = 0;
-            // ÇÖKME DÜZELTMESİ: Harita tamamen doluysa sonsuz döngüye girmeyi engeller. (Güvenlik kilidi)
-            while(!placed && attempts < 500) {
-                let ax = Math.floor(Math.random() * cols) * grid;
-                let ay = Math.floor(Math.random() * rows) * grid;
-                let collision = snake.cells.some(c => c.x === ax && c.y === ay) || fruits
+        function yonAyarla(yon) {
+            if (yonDegistiMi || !isGameRunning) return;
+            if (yon === 'yukari' && yilan.dy === 0) { yilan.dy = -hucreBoyutu; yilan.dx = 0; yonDegistiMi = true; }
+            if (yon === 'asagi' && yilan.dy === 0) { yilan.dy = hucreBoyutu; yilan.dx = 0; yonDegistiMi = true; }
+            if (yon === 'sola' && yilan.dx === 0) { yilan.dx = -hucreBoyutu; yilan.dy = 0; yonDegistiMi = true; }
+            if (yon === 'saga' && yilan.dx === 0) { yilan.dx = hucreBoyutu; yilan.dy = 0; yonDegistiMi = true; }
+        }
+
+        // Klavye Kontrolü
+        document.addEventListener('keydown', e => {
+            if (!isGameRunning) return;
+            if (e.key === 'ArrowUp' || e.key === 'w') yonAyarla('yukari');
+            if (e.key === 'ArrowDown' || e.key === 's') yonAyarla('asagi');
+            if (e.key === 'ArrowLeft' || e.key === 'a') yonAyarla('sola');
+            if (e.key === 'ArrowRight' || e.key === 'd') yonAyarla('saga');
+        });
+
+        // Ekran Butonları Kontrolü
+        ['yukari', 'asagi', 'sola', 'saga'].forEach(id => {
+            let btn = document.getElementById(id);
+            btn.onmousedown = () => yonAyarla(id);
+            btn.ontouchstart = (e) => { e.preventDefault(); yonAyarla(id); }; // Mobil hızlandırma
+        });
+
+        function izgaraCiz() {
+            ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+            for (let x = 0; x <= canvas.width; x += hucreBoyutu) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = 0; y <= canvas.height; y += hucreBoyutu) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+        }
+
+        function meyveCiz(x, y, tip, sure) {
+            if (tip === 'normal') ctx.fillStyle = '#e74c3c'; // Kırmızı
+            else if (tip === 'speed') ctx.fillStyle = '#f39c12'; // Turuncu
+            else if (tip === 'slow') ctx.fillStyle = '#3498db'; // Mavi
+            else if (tip === 'poison') ctx.fillStyle = '#9b59b6'; // Mor
+
+            // Yanıp sönme efekti (kaybolmasına az kaldıysa)
+            if (sure && sure < 30 && sure % 4 < 2) ctx.fillStyle = 'transparent';
+            
+            ctx.fillRect(x, y, hucreBoyutu - 1, hucreBoyutu - 1);
+        }
+
+        function oyunMotoru() {
+            if (!isGameRunning) return;
+            oyunDongusu = requestAnimationFrame(oyunMotoru);
+
+            // Buff Kontrolü
+            if (buffSuresi > 0) {
+                buffSuresi--;
+                if (buffSuresi <= 0) {
+                    gecerliHiz = tabanHiz;
+                    aktifBuff = null;
+                    document.getElementById('buff-yazisi').innerText = "";
+                }
+            }
+
+            // Hız ayarlayıcı
+            if (++cerceveSayaci < gecerliHiz) return;
+            cerceveSayaci = 0;
+            yonDegistiMi = false;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            izgaraCiz();
+
+            // Yılanı Hareket Ettir
+            yilan.x += yilan.dx;
+            yilan.y += yilan.dy;
+
+            // Duvara Çarpma Kontrolü
+            if (yilan.x < 0 || yilan.x >= canvas.width || yilan.y < 0 || yilan.y >= canvas.height) {
+                oyunuBitir(); return;
+            }
+
+            yilan.kuyruk.unshift({ x: yilan.x, y: yilan.y });
+            if (yilan.kuyruk.length > yilan.uzunluk) yilan.kuyruk.pop();
+
+            // Meyveleri Çiz ve Sürelerini Düşür
+            for (let i = elmalar.length - 1; i >= 0; i--) {
+                let elma = elmalar[i];
+                meyveCiz(elma.x, elma.y, elma.tip, elma.sure);
+
+                if (elma.sure !== null) {
+                    elma.sure--;
+                    if (elma.sure <= 0) elmalar.splice(i, 1);
+                }
+            }
+
+            // Yılanı Çiz ve Çarpışmaları Kontrol Et
+            ctx.fillStyle = seciliYilanRengi;
+            yilan.kuyruk.forEach(function(hucre, index) {
+                ctx.fillRect(hucre.x, hucre.y, hucreBoyutu - 1, hucreBoyutu - 1);
+
+                // Yılan Elma Yedi mi?
+                for (let i = 0; i < elmalar.length; i++) {
+                    if (hucre.x === elmalar[i].x && hucre.y === elmalar[i].y) {
+                        let yenen = elmalar.splice(i, 1)[0];
+                        uygulaMeyveEtkisi(yenen.tip);
+                        break;
+                    }
