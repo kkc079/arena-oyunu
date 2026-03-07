@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yılan: Sürüm 6.0</title>
+    <title>Yılan: Sürüm 6.1 (Kado)</title>
     <style>
         /* SIFIRDAN TEMİZ VE GÜVENLİ CSS */
         body, html {
@@ -19,7 +19,6 @@
             background-color: #121212; z-index: 10; padding: 10px; box-sizing: border-box;
         }
 
-        /* Güvenli Buton Yapısı (<button> yerine <div> kullanıldı, tarayıcı engellemez) */
         .btn {
             background-color: #39ff14; color: #000; border-radius: 8px;
             padding: 15px 20px; font-size: 18px; font-weight: bold; margin: 8px 0; 
@@ -30,19 +29,16 @@
         .btn-mavi { background-color: #3498db; color: #fff; box-shadow: 0 4px 0 #1c6ea4; }
         .btn-kirmizi { background-color: #e74c3c; color: #fff; box-shadow: 0 4px 0 #9c2b1f; }
 
-        /* Seçiciler */
         .kutu-secim { display: flex; gap: 15px; margin: 15px 0; background: #222; padding: 10px; border-radius: 10px; }
         .renk-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
         .renk-btn.secili { border-color: #fff; transform: scale(1.1); }
         .meyve-btn { font-size: 24px; padding: 5px 10px; cursor: pointer; opacity: 0.4; }
         .meyve-btn.secili { opacity: 1; border-bottom: 2px solid #39ff14; }
 
-        /* Oyun Alanı */
         canvas { background-color: #050a05; border: 3px solid #333; border-radius: 5px; touch-action: none; max-width: 95vw; display: block; margin: 0 auto; }
         .ust-bilgi { display: flex; justify-content: space-between; width: 100%; max-width: 288px; margin-bottom: 10px; font-weight: bold; font-size: 16px;}
         #buffYazi { color: #f1c40f; text-shadow: 1px 1px 2px #000; }
 
-        /* Yön Tuşları */
         .yon-paneli { display: grid; grid-template-columns: 70px 70px 70px; grid-template-rows: 70px 70px 70px; gap: 10px; margin-top: 15px; touch-action: none; }
         .yon-btn {
             background-color: #333; color: #fff; font-size: 30px; border-radius: 15px; 
@@ -129,7 +125,7 @@
         <div class="btn btn-mavi" onclick="ekranGecis('ekran-menu')">ANA MENÜ</div>
     </div>
 
-    <div id="surum">Sürüm 6.0</div>
+    <div id="surum">Sürüm 6.1</div>
 
     <script>
         // -- DEĞİŞKENLER --
@@ -139,7 +135,7 @@
         var ctxO = canvasO.getContext('2d');
 
         var hucre = 16;
-        var boyut = 18; // 18x18 = 288px
+        var boyut = 18; 
         
         var yilanRengi = '#39ff14';
         var editorMeyve = 'normal';
@@ -147,18 +143,47 @@
 
         var yilan = { x: 0, y: 0, dx: hucre, dy: 0, kuyruk: [], uzunluk: 4 };
         var meyveler = [];
-        var haritaMeyveleri = []; // Editördeki meyveler
+        var haritaMeyveleri = []; 
 
         var skor = 0; var rekor = 0;
         var tabanHiz = 10; var hiz = 10; var sayac = 0;
         var yonKilit = false; var buffSuresi = 0;
         var oyunDongusu; var oyunAktif = false;
 
-        // Hafıza
         try {
-            rekor = localStorage.getItem('yilanRekorV6') || 0;
+            rekor = localStorage.getItem('yilanRekorV61') || 0;
             document.getElementById('rekorYazi').innerText = rekor;
         } catch(e) {}
+
+        // -- EKSİK OLAN KADO MODU FONKSİYONU BURADA --
+        function kadoModuBaslat() {
+            haritaMeyveleri = [];
+            boyut = 18;
+            var h = hucre;
+            function ekle(c, r) { haritaMeyveleri.push({x: c*h, y: r*h, tip: 'normal'}); }
+
+            // O
+            [2,3,4,5].forEach(c => { ekle(c,2); ekle(c,8); });
+            [3,4,5,6,7].forEach(r => { ekle(2,r); ekle(5,r); });
+            // C
+            [10,11,12,13,14].forEach(c => { ekle(c,2); ekle(c,8); });
+            [3,4,5,6,7].forEach(r => { ekle(10,r); });
+            // K
+            [11,12,13,14,15,16].forEach(r => { ekle(1,r); });
+            ekle(4,11); ekle(3,12); ekle(2,13); ekle(2,14); ekle(3,15); ekle(4,16);
+            // A
+            ekle(6,11); ekle(6,14);
+            [12,13,14,15,16].forEach(r => { ekle(5,r); ekle(7,r); });
+            // D
+            [11,12,13,14,15,16].forEach(r => { ekle(9,r); });
+            ekle(10,11); ekle(11,11); ekle(10,16); ekle(11,16);
+            [12,13,14,15].forEach(r => { ekle(12,r); });
+            // O (Alt)
+            [14,15,16].forEach(c => { ekle(c,11); ekle(c,16); });
+            [12,13,14,15].forEach(r => { ekle(14,r); ekle(16,r); });
+
+            oyunuBaslat(true);
+        }
 
         // -- MENÜ FONKSİYONLARI --
         function ekranGecis(hedefEkran) {
@@ -187,35 +212,6 @@
             document.querySelectorAll('.meyve-btn').forEach(b => b.classList.remove('secili'));
             el.classList.add('secili');
             editorMeyve = tip;
-        }
-
-        // -- KADO ÖZEL HARİTASI --
-        function kadoModuBaslat() {
-            haritaMeyveleri = [];
-            var h = hucre;
-            function ekle(c, r) { haritaMeyveleri.push({x: c*h, y: r*h, tip: 'normal'}); }
-
-            // O
-            [2,3,4,5].forEach(c => { ekle(c,2); ekle(c,8); });
-            [3,4,5,6,7].forEach(r => { ekle(2,r); ekle(5,r); });
-            // C
-            [10,11,12,13,14].forEach(c => { ekle(c,2); ekle(c,8); });
-            [3,4,5,6,7].forEach(r => { ekle(10,r); });
-            // K
-            [11,12,13,14,15,16].forEach(r => { ekle(1,r); });
-            ekle(4,11); ekle(3,12); ekle(2,13); ekle(2,14); ekle(3,15); ekle(4,16);
-            // A
-            ekle(6,11); ekle(6,14);
-            [12,13,14,15,16].forEach(r => { ekle(5,r); ekle(7,r); });
-            // D
-            [11,12,13,14,15,16].forEach(r => { ekle(9,r); });
-            ekle(10,11); ekle(11,11); ekle(10,16); ekle(11,16);
-            [12,13,14,15].forEach(r => { ekle(12,r); });
-            // O (Alt)
-            [14,15,16].forEach(c => { ekle(c,11); ekle(c,16); });
-            [12,13,14,15].forEach(r => { ekle(14,r); ekle(16,r); });
-
-            oyunuBaslat(true);
         }
 
         // -- EDİTÖR FONKSİYONLARI --
@@ -272,6 +268,9 @@
             gecerliOzelMod = ozelMi;
             ekranGecis('ekran-oyun');
             
+            if(!ozelMi) boyut = 18; 
+            cOyun.width = boyut * hucre; cOyun.height = boyut * hucre;
+
             yilan.x = Math.floor(boyut/2) * hucre; yilan.y = Math.floor(boyut/2) * hucre;
             yilan.kuyruk = []; yilan.uzunluk = 4; yilan.dx = hucre; yilan.dy = 0;
             
@@ -311,9 +310,9 @@
             if(e) e.preventDefault();
             if(yonKilit || !oyunAktif) return;
             if(yon === 'yukari' && yilan.dy === 0) { yilan.dy = -hucre; yilan.dx = 0; yonKilit = true; }
-            if(yon === 'asagi' && yilan.dy === 0) { yilan.dy = hucre; yilan.dx = 0; yonKilit = true; }
-            if(yon === 'sola' && yilan.dx === 0) { yilan.dx = -hucre; yilan.dy = 0; yonKilit = true; }
-            if(yon === 'saga' && yilan.dx === 0) { yilan.dx = hucre; yilan.dy = 0; yonKilit = true; }
+            else if(yon === 'asagi' && yilan.dy === 0) { yilan.dy = hucre; yilan.dx = 0; yonKilit = true; }
+            else if(yon === 'sola' && yilan.dx === 0) { yilan.dx = -hucre; yilan.dy = 0; yonKilit = true; }
+            else if(yon === 'saga' && yilan.dx === 0) { yilan.dx = hucre; yilan.dy = 0; yonKilit = true; }
         }
 
         document.onkeydown = function(e) {
@@ -407,4 +406,4 @@
                 }
 
                 // Çarpışma
-                if(i > 0 
+                if(i > 0 && hObj.x === yilan.x && hObj.y === yilan.y) o
