@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Yılan: Özel Sürüm</title>
+    <title>Yılan: Kusursuz Sürüm</title>
     <style>
-        * { box-sizing: border-box; }
+        /* Genel Ayarlar ve Kaydırma Korumaları */
+        * { box-sizing: border-box; touch-action: manipulation; }
         body {
             margin: 0; padding: 0;
             background-color: #1a1a24; color: #ecf0f1;
@@ -13,30 +14,32 @@
             display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start;
             height: 100dvh; max-height: 100dvh; overflow: hidden; 
-            touch-action: none; user-select: none; -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none;
         }
 
-        /* Ortak Buton Stilleri */
+        /* Tüm butonlarda dokunmatik kaymayı engelle (Tıklama garantisi) */
+        button, .dir-btn, .f-btn { touch-action: none; outline: none; }
+
         .primary-btn {
             background-color: #39ff14; color: #000; border: 2px solid #28b40e;
             padding: 15px 20px; font-size: 18px; font-weight: bold;
             border-radius: 8px; margin-bottom: 12px; cursor: pointer;
             width: 85%; max-width: 320px; text-align: center;
-            box-shadow: 0 4px 0 #28b40e; transition: 0.1s; text-transform: uppercase;
+            box-shadow: 0 4px 0 #28b40e; transition: transform 0.1s; text-transform: uppercase;
         }
         .secondary-btn {
             background-color: #2c3e50; color: #fff; border: 2px solid #39ff14;
             padding: 12px 20px; font-size: 16px; font-weight: bold;
             border-radius: 8px; margin-bottom: 12px; cursor: pointer;
             width: 85%; max-width: 320px; text-align: center;
-            box-shadow: 0 4px 0 #151e27; transition: 0.1s;
+            box-shadow: 0 4px 0 #151e27; transition: transform 0.1s;
         }
         .primary-btn:active, .secondary-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        /* --- BAŞLANGIÇ MENÜSÜ --- */
+        /* --- MENÜLER --- */
         #start-menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(26, 26, 36, 0.95); display: flex; flex-direction: column;
+            background: rgba(26, 26, 36, 1); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 50;
         }
         #start-menu h1 { font-size: 45px; color: #39ff14; text-shadow: 0 0 15px rgba(57, 255, 20, 0.7); margin-bottom: 10px; letter-spacing: 5px; }
@@ -47,7 +50,6 @@
         }
         input[type="color"] { border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; background: transparent; }
 
-        /* --- HARİTA YAPICI (EDİTÖR) --- */
         #editor-ui {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #1a1a24; flex-direction: column; align-items: center; padding-top: 10px; z-index: 40;
@@ -65,11 +67,9 @@
             padding: 5px 10px; font-size: 20px; cursor: pointer; opacity: 0.5; transition: 0.2s;
         }
         .f-btn.active { opacity: 1; border-color: #39ff14; background: rgba(57, 255, 20, 0.1); }
-
         .editor-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
         .editor-btn-row button { flex: 1; padding: 8px; font-size: 14px; margin-bottom: 0; }
 
-        /* --- OYUN ARAYÜZÜ --- */
         #game-ui {
             display: none; width: 100%; height: 100%;
             flex-direction: column; align-items: center; justify-content: space-between; padding-bottom: 20px;
@@ -81,25 +81,23 @@
             background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 5px; border: 1px solid #333; display: inline-block;
         }
         .highlight { color: #f1c40f; }
-
         #buff-indicator {
             position: absolute; top: 0; right: 10px; font-weight: bold; font-size: 18px; display: none;
             animation: blink 1s infinite;
         }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
-        /* Canvas Taşıyıcı */
+        /* Canvas */
         .canvas-wrapper {
             margin: auto 0; display: flex; justify-content: center; align-items: center;
             background: #0f1c0f; border: 4px solid #333; border-radius: 5px; box-shadow: 0 5px 25px rgba(0,0,0,0.8);
             max-width: 95vw; max-height: 50vh; overflow: hidden;
+            touch-action: none; /* Editörde çizim yaparken sayfanın kaymasını önler */
         }
-        canvas { background-color: transparent; display: block; max-width: 100%; max-height: 100%; object-fit: contain; touch-action: none; }
+        canvas { background-color: transparent; display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
 
         /* Sanal Konsol */
-        #controls {
-            display: grid; grid-template-columns: 70px 70px 70px; grid-template-rows: 70px 70px 70px; gap: 10px; margin-bottom: 10px;
-        }
+        #controls { display: grid; grid-template-columns: 70px 70px 70px; grid-template-rows: 70px 70px 70px; gap: 10px; margin-bottom: 10px; }
         .dir-btn {
             background-color: #2c3e50; border: 2px solid #1a252f; border-radius: 15px; color: rgba(255,255,255,0.7);
             font-size: 30px; display: flex; align-items: center; justify-content: center;
@@ -124,14 +122,12 @@
 
     <div id="start-menu">
         <h1>S N A K E</h1>
-        
         <div class="color-picker-container">
             <span style="font-size: 18px; font-weight: bold;">Yılan Rengi:</span>
             <input type="color" id="snake-color" value="#39ff14">
         </div>
-
-        <button class="primary-btn" onclick="startGame(true, false)">📱 TAM EKRAN OYNA</button>
-        <button class="secondary-btn" onclick="openEditor()">🛠️ ÖZEL HARİTA YAP</button>
+        <button class="primary-btn" ontouchstart="safeAction(event, () => window.triggerStart(true, false))" onclick="window.triggerStart(true, false)">📱 TAM EKRAN OYNA</button>
+        <button class="secondary-btn" ontouchstart="safeAction(event, window.triggerEditor)" onclick="window.triggerEditor()">🛠️ ÖZEL HARİTA YAP</button>
     </div>
 
     <div id="editor-ui">
@@ -140,32 +136,31 @@
         
         <div class="editor-controls">
             <div class="fruit-selector">
-                <div class="f-btn active" onclick="selectEditorFruit('normal', this)">🍎</div>
-                <div class="f-btn" onclick="selectEditorFruit('speed', this)">⚡</div>
-                <div class="f-btn" onclick="selectEditorFruit('slow', this)">❄️</div>
-                <div class="f-btn" onclick="selectEditorFruit('poison', this)">☠️</div>
+                <div class="f-btn active" ontouchstart="safeAction(event, () => window.selectFruit('normal', this))" onclick="window.selectFruit('normal', this)">🍎</div>
+                <div class="f-btn" ontouchstart="safeAction(event, () => window.selectFruit('speed', this))" onclick="window.selectFruit('speed', this)">⚡</div>
+                <div class="f-btn" ontouchstart="safeAction(event, () => window.selectFruit('slow', this))" onclick="window.selectFruit('slow', this)">❄️</div>
+                <div class="f-btn" ontouchstart="safeAction(event, () => window.selectFruit('poison', this))" onclick="window.selectFruit('poison', this)">☠️</div>
             </div>
-
             <div class="slider-group">
                 <span>Genişlik:</span>
-                <input type="range" id="map-cols" min="10" max="30" value="20" oninput="resizeMap()">
+                <input type="range" id="map-cols" min="10" max="30" value="20" oninput="window.resizeMap()">
                 <span id="col-val">20</span>
             </div>
             <div class="slider-group">
                 <span>Yükseklik:</span>
-                <input type="range" id="map-rows" min="10" max="30" value="20" oninput="resizeMap()">
+                <input type="range" id="map-rows" min="10" max="30" value="20" oninput="window.resizeMap()">
                 <span id="row-val">20</span>
             </div>
             <div class="editor-btn-row">
-                <button class="secondary-btn" onclick="fillMap()">Doldur</button>
-                <button class="secondary-btn" onclick="clearMap()">Temizle</button>
+                <button class="secondary-btn" ontouchstart="safeAction(event, window.fillMap)" onclick="window.fillMap()">Doldur</button>
+                <button class="secondary-btn" ontouchstart="safeAction(event, window.clearMap)" onclick="window.clearMap()">Temizle</button>
             </div>
         </div>
 
         <div class="canvas-wrapper" id="editor-canvas-container"></div>
 
-        <button class="primary-btn" style="margin-top: 10px;" onclick="startGame(true, true)">▶️ HARİTAYI OYNA</button>
-        <button class="secondary-btn" onclick="backToMenu()">Ana Menü</button>
+        <button class="primary-btn" style="margin-top: 10px;" ontouchstart="safeAction(event, () => window.triggerStart(true, true))" onclick="window.triggerStart(true, true)">▶️ HARİTAYI OYNA</button>
+        <button class="secondary-btn" ontouchstart="safeAction(event, window.triggerMenu)" onclick="window.triggerMenu()">Ana Menü</button>
     </div>
 
     <div id="game-ui">
@@ -176,11 +171,9 @@
                 SKOR: <span id="score" style="color:#fff;">0</span> | REKOR: <span id="high-score" class="highlight">0</span>
             </div>
         </div>
-
         <div class="canvas-wrapper" id="game-canvas-container">
             <canvas id="gameCanvas"></canvas>
         </div>
-
         <div id="controls">
             <div class="dir-btn" id="btn-up">▲</div>
             <div class="dir-btn" id="btn-left">◀</div>
@@ -192,11 +185,12 @@
     <div id="game-over">
         <h2>OYUN BİTTİ</h2>
         <div id="final-score" style="font-size: 18px; line-height: 1.5; color: #ccc;">Skorun: 0</div>
-        <button class="primary-btn" style="margin-top: 20px; width: 100%;" onclick="window.resetGame()">YENİDEN BAŞLA</button>
-        <button class="secondary-btn" style="width: 100%;" onclick="backToMenu()">ANA MENÜ</button>
+        <button class="primary-btn" style="margin-top: 20px; width: 100%;" ontouchstart="safeAction(event, window.triggerRestart)" onclick="window.triggerRestart()">YENİDEN BAŞLA</button>
+        <button class="secondary-btn" style="width: 100%;" ontouchstart="safeAction(event, window.triggerMenu)" onclick="window.triggerMenu()">ANA MENÜ</button>
     </div>
 
     <script>
+        // --- GÜVENLİ DEĞİŞKENLER VE HAFIZA ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
@@ -208,42 +202,48 @@
         let gameLoopId; let isGameRunning = false; let gameState = 'MENU';
         
         let score = 0;
-        let highScore = localStorage.getItem('snakeArcadeHighScore') || 0;
+        let highScore = 0;
+        
+        // Çökme Engelleyici 1: LocalStorage Güvenliği
+        try {
+            highScore = localStorage.getItem('snakeSafeScore') || 0;
+        } catch (e) {
+            console.warn("Hafızaya erişilemedi, rekor kaydedilmeyecek.");
+        }
         highScoreElement.innerText = highScore;
 
-        // Hız Sistemleri
-        let calculatedBaseSpeed = 10; 
-        let currentSpeed = calculatedBaseSpeed;
+        let calculatedBaseSpeed = 10; let currentSpeed = calculatedBaseSpeed;
         let frameCount = 0; let changingDirection = false;
-        
-        let activeBuff = null; 
-        let buffTimer = 0;
-
+        let activeBuff = null; let buffTimer = 0;
         let snakeColor = '#39ff14';
         let snake = { x: 0, y: 0, dx: grid, dy: 0, cells: [], maxCells: 4 };
-        
-        let fruits = []; 
-        let customApples = []; 
-        let isCustomMode = false;
-        let currentEditorFruit = 'normal';
+        let fruits = []; let customApples = []; 
+        let isCustomMode = false; let currentEditorFruit = 'normal';
 
-        // Ses Motoru
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        let audioCtx;
+        // --- GÜVENLİ TUŞ TETİKLEYİCİ (Çift basmayı engeller) ---
+        let actionLocked = false;
+        window.safeAction = function(e, callback) {
+            e.preventDefault(); // Dokunmanın kaydırmaya dönüşmesini engeller
+            if (actionLocked) return;
+            actionLocked = true;
+            callback();
+            setTimeout(() => { actionLocked = false; }, 300); // 0.3 saniye tuş kilidi
+        };
 
+        // --- SES MOTORU ---
+        let audioCtx = null;
         function initAudio() {
             try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!audioCtx) audioCtx = new AudioContext();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
             } catch(e) {}
         }
-
         function playSound(type) {
             if (!audioCtx) return;
             try {
                 const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.connect(gain); gain.connect(audioCtx.destination);
-                
                 if (type === 'eat') {
                     osc.type = 'square'; osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
                     gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
@@ -265,12 +265,62 @@
             } catch(e) {}
         }
 
-        // --- HARİTA VE EDİTÖR ---
-        window.selectEditorFruit = function(type, el) {
+        // --- MENÜ FONKSİYONLARI ---
+        window.triggerStart = function(fullscreen, custom) {
+            initAudio(); 
+            snakeColor = document.getElementById('snake-color').value;
+            isCustomMode = custom; gameState = 'PLAYING';
+
+            // Çökme Engelleyici 2: Tam Ekran Güvenliği
+            if (fullscreen) {
+                try {
+                    let elem = document.documentElement;
+                    if (elem.requestFullscreen) { 
+                        elem.requestFullscreen().then(() => {
+                            if(screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
+                        }).catch(()=>{}); 
+                    } else if (elem.webkitRequestFullscreen) { 
+                        elem.webkitRequestFullscreen(); 
+                    }
+                } catch(e) {}
+            }
+
+            document.getElementById('start-menu').style.display = 'none'; 
+            document.getElementById('editor-ui').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex'; 
+            document.getElementById('game-canvas-container').appendChild(canvas);
+
+            if (!custom) { cols = 20; rows = 20; canvas.width = cols * grid; canvas.height = rows * grid; }
+            resetGameLogic(); isGameRunning = true; requestAnimationFrame(loop);
+        };
+
+        window.triggerEditor = function() {
+            gameState = 'EDITOR'; 
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('editor-ui').style.display = 'flex';
+            document.getElementById('editor-canvas-container').appendChild(canvas); 
+            window.resizeMap();
+        };
+
+        window.triggerMenu = function() {
+            isGameRunning = false; cancelAnimationFrame(gameLoopId);
+            document.getElementById('game-over').style.display = 'none'; 
+            document.getElementById('editor-ui').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'none'; 
+            document.getElementById('start-menu').style.display = 'flex';
+            gameState = 'MENU';
+        };
+
+        window.triggerRestart = function() {
+            resetGameLogic(); isGameRunning = true; requestAnimationFrame(loop); 
+        };
+
+        // --- HARİTA EDİTÖRÜ ---
+        window.selectFruit = function(type, el) {
             currentEditorFruit = type;
             document.querySelectorAll('.f-btn').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
-        }
+        };
 
         window.resizeMap = function() {
             cols = parseInt(document.getElementById('map-cols').value);
@@ -280,7 +330,7 @@
             canvas.width = cols * grid; canvas.height = rows * grid;
             customApples = customApples.filter(a => a.x < canvas.width && a.y < canvas.height);
             drawEditor();
-        }
+        };
 
         window.fillMap = function() {
             customApples = [];
@@ -292,22 +342,15 @@
                 }
             }
             drawEditor();
-        }
+        };
 
-        window.clearMap = function() { customApples = []; drawEditor(); }
+        window.clearMap = function() { customApples = []; drawEditor(); };
 
+        // Editör Çizimi
         let isDrawing = false; let drawMode = 'add'; 
-
-        // Editör için çizim eventleri
-        canvas.addEventListener('pointerdown', (e) => {
-            if (gameState !== 'EDITOR') return;
-            isDrawing = true; handleEditorDraw(e, true);
-        });
-        canvas.addEventListener('pointermove', (e) => {
-            if (gameState !== 'EDITOR' || !isDrawing) return;
-            handleEditorDraw(e, false);
-        });
-        window.addEventListener('pointerup', () => isDrawing = false);
+        canvas.addEventListener('pointerdown', (e) => { if (gameState === 'EDITOR') { isDrawing = true; handleEditorDraw(e, true); } });
+        canvas.addEventListener('pointermove', (e) => { if (gameState === 'EDITOR' && isDrawing) handleEditorDraw(e, false); });
+        window.addEventListener('pointerup', () => { isDrawing = false; });
 
         function handleEditorDraw(e, isFirstTouch) {
             let rect = canvas.getBoundingClientRect();
@@ -323,94 +366,13 @@
             
             if (drawMode === 'add' && index === -1) customApples.push({x, y, type: currentEditorFruit});
             else if (drawMode === 'remove' && index > -1) customApples.splice(index, 1);
-            
             drawEditor();
         }
 
         function drawEditor() {
             ctx.clearRect(0, 0, canvas.width, canvas.height); drawGrid();
-            
             customApples.forEach(a => {
                 if(a.type === 'normal') ctx.fillStyle = '#ff003c';
                 else if(a.type === 'speed') ctx.fillStyle = '#f39c12';
                 else if(a.type === 'slow') ctx.fillStyle = '#00ffff';
-                else if(a.type === 'poison') ctx.fillStyle = '#8e44ad';
-                ctx.fillRect(a.x, a.y, grid-1, grid-1);
-            });
-
-            ctx.fillStyle = document.getElementById('snake-color').value; ctx.globalAlpha = 0.5;
-            ctx.fillRect(Math.floor(cols/2)*grid, Math.floor(rows/2)*grid, grid-1, grid-1); ctx.globalAlpha = 1.0;
-        }
-
-        // --- MENÜ GEÇİŞLERİ ---
-        window.openEditor = function() {
-            gameState = 'EDITOR'; 
-            document.getElementById('start-menu').style.display = 'none';
-            document.getElementById('editor-ui').style.display = 'flex';
-            document.getElementById('editor-canvas-container').appendChild(canvas); 
-            resizeMap();
-        }
-
-        window.backToMenu = function() {
-            isGameRunning = false; cancelAnimationFrame(gameLoopId);
-            document.getElementById('game-over').style.display = 'none'; 
-            document.getElementById('editor-ui').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'none'; 
-            document.getElementById('start-menu').style.display = 'flex';
-            gameState = 'MENU';
-        }
-
-        window.startGame = function(fullscreen, custom) {
-            initAudio(); 
-            snakeColor = document.getElementById('snake-color').value;
-            isCustomMode = custom; gameState = 'PLAYING';
-
-            if (fullscreen) {
-                try {
-                    let elem = document.documentElement;
-                    if (elem.requestFullscreen) { elem.requestFullscreen().then(() => screen.orientation.lock('portrait').catch(()=>{})).catch(()=>{}); } 
-                    else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); setTimeout(() => screen.orientation.lock('portrait').catch(()=>{}), 500); }
-                } catch(e) {}
-            }
-
-            document.getElementById('start-menu').style.display = 'none'; 
-            document.getElementById('editor-ui').style.display = 'none';
-            document.getElementById('game-ui').style.display = 'flex'; 
-            document.getElementById('game-canvas-container').appendChild(canvas);
-
-            if (!custom) { cols = 20; rows = 20; canvas.width = cols * grid; canvas.height = rows * grid; }
-            resetGameLogic(); 
-            isGameRunning = true; 
-            requestAnimationFrame(loop);
-        }
-
-        // --- OYUN MEKANİKLERİ ---
-        function resetGameLogic() {
-            snake.x = Math.floor(cols/2) * grid; snake.y = Math.floor(rows/2) * grid;
-            snake.cells = []; snake.maxCells = 4; snake.dx = grid; snake.dy = 0;
-            score = 0; calculatedBaseSpeed = 10; currentSpeed = calculatedBaseSpeed;
-            activeBuff = null; buffTimer = 0; buffIndicator.style.display = 'none';
-            
-            scoreElement.innerText = score; changingDirection = false;
-            document.getElementById('game-over').style.display = 'none';
-
-            if (isCustomMode) {
-                fruits = customApples.map(a => ({x: a.x, y: a.y, type: a.type, lifeTime: null}));
-                if (!fruits.some(f => f.type === 'normal')) spawnFruit('normal'); 
-            } else {
-                fruits = []; spawnFruit('normal');
-            }
-        }
-        
-        window.resetGame = function() { 
-            resetGameLogic(); isGameRunning = true; requestAnimationFrame(loop); 
-        }
-
-        function spawnFruit(type) {
-            // ÇÖKME ENGELLEYİCİ: Haritada hiç boş yer kalmadıysa elma aramaya çalışıp kilitlenmeyi engeller
-            if (snake.cells.length + fruits.length >= cols * rows) return; 
-
-            let placed = false;
-            let attempts = 0;
-            while(!placed && attempts < 500) {
-                let ax = Math.floor(Math.random() *
+                els
